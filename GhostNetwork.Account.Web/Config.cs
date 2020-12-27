@@ -37,9 +37,9 @@ namespace GhostNetwork.Account.Web
                 ClientName = "Angular Client",
                 AllowedGrantTypes = GrantTypes.Implicit,
                 AllowedScopes = new List<string> {"openid", "profile"},
-                RedirectUris = new List<string> {"http://boberneprotiv.com/auth-callback"},
-                PostLogoutRedirectUris = new List<string> {"http://boberneprotiv.com/"},
-                AllowedCorsOrigins = new List<string> {"http://boberneprotiv.com"},
+                RedirectUris = new List<string> {"https://gn.boberneprotiv.com/auth-callback"},
+                PostLogoutRedirectUris = new List<string> {"https://gn.boberneprotiv.com/"},
+                AllowedCorsOrigins = new List<string> {"https://gn.boberneprotiv.com"},
                 AllowAccessTokensViaBrowser = true
             }
         };
