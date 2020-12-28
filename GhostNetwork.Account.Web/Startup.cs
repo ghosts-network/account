@@ -39,12 +39,14 @@ namespace GhostNetwork.Account.Web
             
             builder.Services.ConfigureExternalCookie(options => {
                 options.Cookie.IsEssential = true;
-                options.Cookie.SameSite = SameSiteMode.Unspecified;
+                options.Cookie.SameSite = SameSiteMode.None;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             });
 
             builder.Services.ConfigureApplicationCookie(options => {
                 options.Cookie.IsEssential = true;
-                options.Cookie.SameSite = SameSiteMode.Unspecified;
+                options.Cookie.SameSite = SameSiteMode.None;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             });
 
             // not recommended for production - you need to store your key material somewhere secure
