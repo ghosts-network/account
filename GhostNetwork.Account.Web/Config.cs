@@ -10,13 +10,24 @@ namespace GhostNetwork.Account.Web
 {
     public static class Config
     {
-        public static IdentityResource[] IdentityResources => new IdentityResource[]
+        public static IEnumerable<IdentityResource> IdentityResources => new IdentityResource[]
         {
             new IdentityResources.OpenId(),
-            new IdentityResources.Profile(),
+            new IdentityResources.Profile()
         };
 
-        public static ApiScope[] ApiScopes => new ApiScope[] {};
+        public static IEnumerable<ApiScope> ApiScopes => new[]
+        {
+            new ApiScope("api", "Full Access to API")
+        };
+
+        public static IEnumerable<ApiResource> ApiResources => new[]
+        {
+            new ApiResource("api", "Main API")
+            {
+                Scopes = {"api"}
+            }
+        };
 
         public static IEnumerable<Client> Clients => new[]
         {

@@ -36,6 +36,7 @@ namespace GhostNetwork.Account.Web
                 .AddTestUsers(Config.Users)
                 .AddInMemoryIdentityResources(Config.IdentityResources)
                 .AddInMemoryApiScopes(Config.ApiScopes)
+                .AddInMemoryApiResources(Config.ApiResources)
                 .AddInMemoryClients(Config.Clients);
             
             builder.Services.ConfigureExternalCookie(options => {
