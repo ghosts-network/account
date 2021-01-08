@@ -71,7 +71,7 @@ namespace GhostNetwork.Account.Web
         {
             new TestUser
             {
-                SubjectId = "818727",
+                SubjectId = "3fa85f64-5717-4562-b3fc-2c963f66af76",
                 Username = "alice",
                 Password = "alice",
                 Claims =
@@ -80,20 +80,12 @@ namespace GhostNetwork.Account.Web
                     new Claim(JwtClaimTypes.GivenName, "Alice"),
                     new Claim(JwtClaimTypes.FamilyName, "Smith"),
                     new Claim(JwtClaimTypes.Email, "AliceSmith@email.com"),
-                    new Claim(JwtClaimTypes.EmailVerified, "true", ClaimValueTypes.Boolean),
-                    new Claim(JwtClaimTypes.WebSite, "http://alice.com"),
-                    new Claim(JwtClaimTypes.Address, JsonSerializer.Serialize(new
-                    {
-                        street_address = "One Hacker Way",
-                        locality = "Heidelberg",
-                        postal_code = 69118,
-                        country = "Germany"
-                    }), IdentityServerConstants.ClaimValueTypes.Json)
+                    new Claim(JwtClaimTypes.EmailVerified, "true", ClaimValueTypes.Boolean)
                 }
             },
             new TestUser
             {
-                SubjectId = "88421113",
+                SubjectId = "3fa85f64-5717-4562-b3fc-2c963f66af77",
                 Username = "bob",
                 Password = "bob",
                 Claims =
@@ -102,8 +94,7 @@ namespace GhostNetwork.Account.Web
                     new Claim(JwtClaimTypes.GivenName, "Bob"),
                     new Claim(JwtClaimTypes.FamilyName, "Smith"),
                     new Claim(JwtClaimTypes.Email, "BobSmith@email.com"),
-                    new Claim(JwtClaimTypes.EmailVerified, "true", ClaimValueTypes.Boolean),
-                    new Claim(JwtClaimTypes.WebSite, "http://bob.com")
+                    new Claim(JwtClaimTypes.EmailVerified, "true", ClaimValueTypes.Boolean)
                 }
             }
         };
