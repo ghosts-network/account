@@ -56,6 +56,18 @@ namespace GhostNetwork.Account.Web
             },
             new Client
             {
+                ClientId = "swagger_prod",
+                ClientName = "Swagger Prod",
+                ClientSecrets = {new Secret("secret".Sha256())},
+
+                AllowedGrantTypes = GrantTypes.Code,
+
+                RedirectUris = new List<string> {"https://api.gn.boberneprotiv.com/swagger/oauth2-redirect.html"},
+                AllowedCorsOrigins = new List<string> {"https://api.gn.boberneprotiv.com"},
+                AllowedScopes = new List<string> {"openid", "profile", "api"}
+            },
+            new Client
+            {
                 ClientId = "angular_spa_prod",
                 ClientName = "Angular Client",
                 AllowedGrantTypes = GrantTypes.Implicit,
