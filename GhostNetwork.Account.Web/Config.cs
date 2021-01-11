@@ -1,9 +1,7 @@
 ﻿using IdentityServer4.Models;
 using System.Collections.Generic;
 using System.Security.Claims;
-using System.Text.Json;
 using IdentityModel;
-using IdentityServer4;
 using IdentityServer4.Test;
 
 namespace GhostNetwork.Account.Web
@@ -76,6 +74,17 @@ namespace GhostNetwork.Account.Web
                 PostLogoutRedirectUris = new List<string> {"https://gn.boberneprotiv.com/"},
                 AllowedCorsOrigins = new List<string> {"https://gn.boberneprotiv.com"},
                 AllowAccessTokensViaBrowser = true
+            },
+            new Client
+            {
+                ClientId = "api_tests",
+                ClientName = "Api tests",
+                AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
+                ClientSecrets =
+                {
+                    new Secret("secret".Sha256())
+                },
+                AllowedScopes = new List<string> {"openid", "profile", "api"}
             }
         };
 
