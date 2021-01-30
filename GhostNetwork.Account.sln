@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GhostNetwork.Account.Web", "GhostNetwork.Account.Web\GhostNetwork.Account.Web.csproj", "{C5257A83-CB41-463C-9C45-CF6FE7003F6A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GhostNetwork.AspNetCore.Identity.Mongo", "GhostNetwork.AspNetCore.Identity.Mongo\GhostNetwork.AspNetCore.Identity.Mongo.csproj", "{0E27C453-2866-48AB-A300-764996DC9D4F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{C5257A83-CB41-463C-9C45-CF6FE7003F6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C5257A83-CB41-463C-9C45-CF6FE7003F6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C5257A83-CB41-463C-9C45-CF6FE7003F6A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E27C453-2866-48AB-A300-764996DC9D4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E27C453-2866-48AB-A300-764996DC9D4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E27C453-2866-48AB-A300-764996DC9D4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E27C453-2866-48AB-A300-764996DC9D4F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
