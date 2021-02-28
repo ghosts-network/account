@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using GhostNetwork.AspNetCore.Identity.Mongo;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MongoDB.Driver;
 
 namespace GhostNetwork.Account.Web
 {
@@ -23,6 +26,10 @@ namespace GhostNetwork.Account.Web
         {
             services.AddControllersWithViews();
 
+            services.AddIdentity<IdentityUser, IdentityRole>()
+                .AddMongoDbStores<IdentityDbContext<string>>(new MongoOptions(MongoClientSettings.FromConnectionString(Configuration["MONGO_ADDRESS"]), "account"))
+                .AddDefaultTokenProviders();
+
             var builder = services.AddIdentityServer(options =>
             {
                 options.Events.RaiseErrorEvents = true;
@@ -33,12 +40,13 @@ namespace GhostNetwork.Account.Web
                 // see https://identityserver4.readthedocs.io/en/latest/topics/resources.html
                 options.EmitStaticAudienceClaim = true;
             })
-                .AddTestUsers(Config.Users)
+                // .AddTestUsers(Config.Users)
                 .AddInMemoryIdentityResources(Config.IdentityResources)
                 .AddInMemoryApiScopes(Config.ApiScopes)
                 .AddInMemoryApiResources(Config.ApiResources)
-                .AddInMemoryClients(Config.Clients);
-            
+                .AddInMemoryClients(Config.Clients)
+                .AddAspNetIdentity<IdentityUser>();
+
             builder.Services.ConfigureExternalCookie(options => {
                 options.Cookie.IsEssential = true;
                 options.Cookie.SameSite = SameSiteMode.None;

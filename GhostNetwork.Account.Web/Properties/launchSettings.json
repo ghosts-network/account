@@ -4,7 +4,8 @@
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "MONGO_ADDRESS": "mongodb://127.0.0.1:27017/account"
       },
       "applicationUrl": "https://localhost:5001"
     }

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using IdentityModel;
 using IdentityServer4;
@@ -8,10 +9,9 @@ using IdentityServer4.Extensions;
 using IdentityServer4.Models;
 using IdentityServer4.Services;
 using IdentityServer4.Stores;
-using IdentityServer4.Test;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GhostNetwork.Account.Web.Quickstart.Account
@@ -20,7 +20,8 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
     [AllowAnonymous]
     public class AccountController : Controller
     {
-        private readonly TestUserStore users;
+        private readonly UserManager<IdentityUser> userManager;
+        private readonly SignInManager<IdentityUser> signInManager;
         private readonly IIdentityServerInteractionService interaction;
         private readonly IClientStore clientStore;
         private readonly IAuthenticationSchemeProvider schemeProvider;
@@ -31,9 +32,11 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             IClientStore clientStore,
             IAuthenticationSchemeProvider schemeProvider,
             IEventService events,
-            TestUserStore users)
+            UserManager<IdentityUser> userManager,
+            SignInManager<IdentityUser> signInManager)
         {
-            this.users = users;
+            this.userManager = userManager;
+            this.signInManager = signInManager;
             this.interaction = interaction;
             this.clientStore = clientStore;
             this.schemeProvider = schemeProvider;
@@ -97,31 +100,11 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
 
             if (ModelState.IsValid)
             {
-                // validate username/password against in-memory store
-                if (users.ValidateCredentials(model.Username, model.Password))
+                var result = await signInManager.PasswordSignInAsync(model.Username, model.Password, model.RememberLogin, lockoutOnFailure: true);
+                if (result.Succeeded)
                 {
-                    var user = users.FindByUsername(model.Username);
-                    await events.RaiseAsync(new UserLoginSuccessEvent(user.Username, user.SubjectId, user.Username, clientId: context?.Client.ClientId));
-
-                    // only set explicit expiration here if user chooses "remember me". 
-                    // otherwise we rely upon expiration configured in cookie middleware.
-                    AuthenticationProperties props = null;
-                    if (AccountOptions.AllowRememberLogin && model.RememberLogin)
-                    {
-                        props = new AuthenticationProperties
-                        {
-                            IsPersistent = true,
-                            ExpiresUtc = DateTimeOffset.UtcNow.Add(AccountOptions.RememberMeLoginDuration)
-                        };
-                    };
-
-                    // issue authentication cookie with subject ID and username
-                    var isuser = new IdentityServerUser(user.SubjectId)
-                    {
-                        DisplayName = user.Username
-                    };
-
-                    await HttpContext.SignInAsync(isuser, props);
+                    var user = await userManager.FindByNameAsync(model.Username);
+                    await events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName, clientId: context?.Client.ClientId));
 
                     if (context != null)
                     {
@@ -161,7 +144,57 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             return View(vm);
         }
 
-        
+        [HttpGet]
+        public IActionResult Registration()
+        {
+            return View();
+        }
+
+        /// <summary>
+        /// Handle postback from email/password registration
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Registration(RegistrationInputModel model, string button)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = new IdentityUser
+            {
+                UserName = model.Email,
+                Email = model.Email
+            };
+
+            var result = await userManager.CreateAsync(user, model.Password);
+
+            if (result.Succeeded)
+            {
+                result = await userManager.AddClaimsAsync(user, new[]
+                {
+                    new Claim(JwtClaimTypes.Name, $"{model.FirstName} {model.LastName}"),
+                    new Claim(JwtClaimTypes.GivenName, model.FirstName),
+                    new Claim(JwtClaimTypes.FamilyName, model.LastName),
+                    new Claim(JwtClaimTypes.Email, model.Email),
+                    new Claim(JwtClaimTypes.EmailVerified, "false", ClaimValueTypes.Boolean)
+                });
+
+                if (result.Succeeded)
+                {
+                    return RedirectToAction("Login", "Account");
+                }
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+
+            return View(model);
+        }
+
         /// <summary>
         /// Show logout page
         /// </summary>
@@ -194,7 +227,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             if (User?.Identity.IsAuthenticated == true)
             {
                 // delete local authentication cookie
-                await HttpContext.SignOutAsync();
+                await signInManager.SignOutAsync();
 
                 // raise the logout event
                 await events.RaiseAsync(new UserLogoutSuccessEvent(User.GetSubjectId(), User.GetDisplayName()));
@@ -332,7 +365,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             if (User?.Identity.IsAuthenticated == true)
             {
                 var idp = User.FindFirst(JwtClaimTypes.IdentityProvider)?.Value;
-                if (idp != null && idp != IdentityServer4.IdentityServerConstants.LocalIdentityProvider)
+                if (idp != null && idp != IdentityServerConstants.LocalIdentityProvider)
                 {
                     var providerSupportsSignout = await HttpContext.GetSchemeSupportsSignOutAsync(idp);
                     if (providerSupportsSignout)

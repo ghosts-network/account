@@ -1,6 +1,7 @@
 using System;
 using Microsoft.AspNetCore.Identity;
 using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
 
 namespace GhostNetwork.AspNetCore.Identity.Mongo
@@ -22,7 +23,7 @@ namespace GhostNetwork.AspNetCore.Identity.Mongo
 
         protected virtual void OnConfigure()
         {
-            if (!isConfigured)
+            if (isConfigured)
             {
                 return;
             }
