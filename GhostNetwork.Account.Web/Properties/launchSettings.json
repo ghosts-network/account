@@ -5,7 +5,8 @@
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "MONGO_ADDRESS": "mongodb://127.0.0.1:27017/account"
+        "MONGO_ADDRESS": "mongodb://127.0.0.1:27017/account",
+        "PROFILES_ADDRESS": "http://localhost:5400"
       },
       "applicationUrl": "https://localhost:5001"
     }

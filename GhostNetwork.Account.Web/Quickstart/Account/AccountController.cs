@@ -3,6 +3,8 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using GhostNetwork.Account.Web.Services;
+using GhostNetwork.Profiles.Api;
+using GhostNetwork.Profiles.Model;
 using IdentityModel;
 using IdentityServer4;
 using IdentityServer4.Events;
@@ -24,6 +26,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
         private readonly UserManager<IdentityUser> userManager;
         private readonly SignInManager<IdentityUser> signInManager;
         private readonly IEmailSender emailSender;
+        private readonly IProfilesApi profilesApi;
         private readonly IIdentityServerInteractionService interaction;
         private readonly IClientStore clientStore;
         private readonly IAuthenticationSchemeProvider schemeProvider;
@@ -36,11 +39,13 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             IEventService events,
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            IProfilesApi profilesApi)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
             this.emailSender = emailSender;
+            this.profilesApi = profilesApi;
             this.interaction = interaction;
             this.clientStore = clientStore;
             this.schemeProvider = schemeProvider;
@@ -166,8 +171,13 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
                 return View(model);
             }
 
+            var id = Guid.NewGuid();
+            var profile = new ProfileCreateViewModel(id, model.FirstName, model.LastName);
+            await profilesApi.CreateAsync(profile);
+
             var user = new IdentityUser
             {
+                Id = id.ToString(),
                 UserName = model.Email,
                 Email = model.Email
             };
@@ -178,6 +188,8 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             {
                 result = await userManager.AddClaimsAsync(user, new[]
                 {
+                    new Claim(JwtClaimTypes.Id, id.ToString()),
+                    new Claim(JwtClaimTypes.Subject, id.ToString()), 
                     new Claim(JwtClaimTypes.Name, $"{model.FirstName} {model.LastName}"),
                     new Claim(JwtClaimTypes.GivenName, model.FirstName),
                     new Claim(JwtClaimTypes.FamilyName, model.LastName),
@@ -190,6 +202,10 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
                     await SendConfirmationEmailAsync(user);
                     return RedirectToAction("Login", "Account");
                 }
+            }
+            else
+            {
+                await profilesApi.DeleteAsync(id);
             }
 
             foreach (var error in result.Errors)

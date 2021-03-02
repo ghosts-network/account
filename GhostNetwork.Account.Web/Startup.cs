@@ -1,6 +1,7 @@
 ﻿using GhostNetwork.Account.Web.Services;
 using GhostNetwork.Account.Web.Services.EmailSender;
 using GhostNetwork.AspNetCore.Identity.Mongo;
+using GhostNetwork.Profiles.Api;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -37,6 +38,8 @@ namespace GhostNetwork.Account.Web
                     Configuration["SMTP_EMAIL"]);
                 return new SmtpEmailSender(config);
             });
+
+            services.AddScoped<IProfilesApi>(provider => new ProfilesApi(Configuration["PROFILES_ADDRESS"]));
 
             services.AddControllersWithViews();
 

@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="GhostNetwork.Profiles" Version="1.1.0" />
     <PackageReference Include="IdentityServer4" Version="4.0.0" />
     <PackageReference Include="IdentityServer4.AspNetIdentity" Version="4.0.0" />
     <PackageReference Include="MailKit" Version="2.10.1" />
