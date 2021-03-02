@@ -188,7 +188,6 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             {
                 result = await userManager.AddClaimsAsync(user, new[]
                 {
-                    new Claim(JwtClaimTypes.Id, id.ToString()),
                     new Claim(JwtClaimTypes.Subject, id.ToString()), 
                     new Claim(JwtClaimTypes.Name, $"{model.FirstName} {model.LastName}"),
                     new Claim(JwtClaimTypes.GivenName, model.FirstName),
