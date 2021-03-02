@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using GhostNetwork.Account.Web.Services;
 using IdentityModel;
 using IdentityServer4;
 using IdentityServer4.Events;
@@ -22,6 +23,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
     {
         private readonly UserManager<IdentityUser> userManager;
         private readonly SignInManager<IdentityUser> signInManager;
+        private readonly IEmailSender emailSender;
         private readonly IIdentityServerInteractionService interaction;
         private readonly IClientStore clientStore;
         private readonly IAuthenticationSchemeProvider schemeProvider;
@@ -33,10 +35,12 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             IAuthenticationSchemeProvider schemeProvider,
             IEventService events,
             UserManager<IdentityUser> userManager,
-            SignInManager<IdentityUser> signInManager)
+            SignInManager<IdentityUser> signInManager,
+            IEmailSender emailSender)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
+            this.emailSender = emailSender;
             this.interaction = interaction;
             this.clientStore = clientStore;
             this.schemeProvider = schemeProvider;
@@ -183,6 +187,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
 
                 if (result.Succeeded)
                 {
+                    await SendConfirmationEmailAsync(user);
                     return RedirectToAction("Login", "Account");
                 }
             }
@@ -212,6 +217,24 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             }
 
             return View(vm);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConfirmEmail(string userId, string code)
+        {
+            var user = await userManager.FindByIdAsync(userId);
+            // TODO: user not found
+
+            var result = await userManager.ConfirmEmailAsync(user, code);
+            if (result.Succeeded)
+            {
+                // email confirmed
+                return View();
+            }
+
+            // return page with errors
+            return View();
         }
 
         /// <summary>
@@ -254,10 +277,22 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             return View();
         }
 
-
         /*****************************************/
         /* helper APIs for the AccountController */
         /*****************************************/
+        private async Task SendConfirmationEmailAsync(IdentityUser user)
+        {
+            var code = await userManager.GenerateEmailConfirmationTokenAsync(user);
+            var url = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code }, Request.Scheme);
+
+            var body = $"Please confirm your account by clicking this link: <a href=\"{url}\">link</a>";
+
+            var claims = await userManager.GetClaimsAsync(user);
+            var name = claims.FirstOrDefault(c => c.Type == JwtClaimTypes.Name)?.Value ?? user.Email;
+            await emailSender.SendEmailAsync(new EmailRecipient(name, user.Email), "Confirm your email", body);
+
+        }
+        
         private async Task<LoginViewModel> BuildLoginViewModelAsync(string returnUrl)
         {
             var context = await interaction.GetAuthorizationContextAsync(returnUrl);

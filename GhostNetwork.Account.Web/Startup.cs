@@ -1,4 +1,6 @@
-﻿using GhostNetwork.AspNetCore.Identity.Mongo;
+﻿using GhostNetwork.Account.Web.Services;
+using GhostNetwork.Account.Web.Services.EmailSender;
+using GhostNetwork.AspNetCore.Identity.Mongo;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -24,9 +26,25 @@ namespace GhostNetwork.Account.Web
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddScoped<IEmailSender, SmtpEmailSender>(provider =>
+            {
+                var config = new SmtpClientConfiguration(Configuration["SMTP_HOST"],
+                    Configuration.GetValue<int>("SMTP_POST"),
+                    Configuration.GetValue<bool>("SMTP_SSL_ENABLED"),
+                    Configuration["SMTP_USERNAME"],
+                    Configuration["SMTP_PASSWORD"],
+                    Configuration["SMTP_DISPLAY_NAME"],
+                    Configuration["SMTP_EMAIL"]);
+                return new SmtpEmailSender(config);
+            });
+
             services.AddControllersWithViews();
 
-            services.AddIdentity<IdentityUser, IdentityRole>()
+            services.AddIdentity<IdentityUser, IdentityRole>(options =>
+                {
+                    options.User.RequireUniqueEmail = true;
+                    options.SignIn.RequireConfirmedEmail = true;
+                })
                 .AddMongoDbStores<IdentityDbContext<string>>(new MongoOptions(MongoClientSettings.FromConnectionString(Configuration["MONGO_ADDRESS"]), "account"))
                 .AddDefaultTokenProviders();
 
