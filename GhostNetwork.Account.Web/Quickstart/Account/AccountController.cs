@@ -172,8 +172,6 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             }
 
             var id = Guid.NewGuid();
-            var profile = new ProfileCreateViewModel(id, model.FirstName, model.LastName);
-            await profilesApi.CreateAsync(profile);
 
             var user = new IdentityUser
             {
@@ -197,13 +195,13 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
 
                 if (result.Succeeded)
                 {
+                    await profilesApi.CreateAsync(new ProfileCreateViewModel(id,
+                        model.FirstName,
+                        model.LastName));
+
                     await SendConfirmationEmailAsync(user);
                     return RedirectToAction("Login", "Account");
                 }
-            }
-            else
-            {
-                await profilesApi.DeleteAsync(id);
             }
 
             foreach (var error in result.Errors)
