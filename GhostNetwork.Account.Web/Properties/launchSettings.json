@@ -6,7 +6,8 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "MONGO_ADDRESS": "mongodb://127.0.0.1:27017/account",
-        "PROFILES_ADDRESS": "http://localhost:5400"
+        "PROFILES_ADDRESS": "http://localhost:5400",
+        "EMAIL_SENDER": "NULL"
       },
       "applicationUrl": "https://localhost:5001"
     }

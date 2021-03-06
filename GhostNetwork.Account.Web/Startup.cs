@@ -27,17 +27,24 @@ namespace GhostNetwork.Account.Web
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddScoped<IEmailSender, SmtpEmailSender>(provider =>
+            if (Configuration["EMAIL_SENDER"] == "SMTP")
             {
-                var config = new SmtpClientConfiguration(Configuration["SMTP_HOST"],
-                    Configuration.GetValue<int>("SMTP_POST"),
-                    Configuration.GetValue<bool>("SMTP_SSL_ENABLED"),
-                    Configuration["SMTP_USERNAME"],
-                    Configuration["SMTP_PASSWORD"],
-                    Configuration["SMTP_DISPLAY_NAME"],
-                    Configuration["SMTP_EMAIL"]);
-                return new SmtpEmailSender(config);
-            });
+                services.AddScoped<IEmailSender, SmtpEmailSender>(provider =>
+                {
+                    var config = new SmtpClientConfiguration(Configuration["SMTP_HOST"],
+                        Configuration.GetValue<int>("SMTP_POST"),
+                        Configuration.GetValue<bool>("SMTP_SSL_ENABLED"),
+                        Configuration["SMTP_USERNAME"],
+                        Configuration["SMTP_PASSWORD"],
+                        Configuration["SMTP_DISPLAY_NAME"],
+                        Configuration["SMTP_EMAIL"]);
+                    return new SmtpEmailSender(config);
+                });
+            }
+            else
+            {
+                services.AddScoped<IEmailSender, NullEmailSender>();
+            }
 
             services.AddScoped<IProfilesApi>(provider => new ProfilesApi(Configuration["PROFILES_ADDRESS"]));
 
