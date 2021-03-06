@@ -45,6 +45,8 @@ namespace GhostNetwork.Account.Web
             {
                 services.AddScoped<IEmailSender, NullEmailSender>();
             }
+            
+            services.AddScoped<IDefaultClientProvider>(provider => new DefaultClientProvider(Configuration["DEFAULT_CLIENT"]));
 
             services.AddScoped<IProfilesApi>(provider => new ProfilesApi(Configuration["PROFILES_ADDRESS"]));
 

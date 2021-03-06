@@ -7,7 +7,8 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "MONGO_ADDRESS": "mongodb://127.0.0.1:27017/account",
         "PROFILES_ADDRESS": "http://localhost:5400",
-        "EMAIL_SENDER": "NULL"
+        "EMAIL_SENDER": "NULL",
+        "DEFAULT_CLIENT": "angular_spa_prod"
       },
       "applicationUrl": "https://localhost:5001"
     }

@@ -31,6 +31,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
         private readonly IClientStore clientStore;
         private readonly IAuthenticationSchemeProvider schemeProvider;
         private readonly IEventService events;
+        private readonly IDefaultClientProvider defaultClientProvider;
 
         public AccountController(
             IIdentityServerInteractionService interaction,
@@ -40,12 +41,13 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
             IEmailSender emailSender,
-            IProfilesApi profilesApi)
+            IProfilesApi profilesApi, IDefaultClientProvider defaultClientProvider)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
             this.emailSender = emailSender;
             this.profilesApi = profilesApi;
+            this.defaultClientProvider = defaultClientProvider;
             this.interaction = interaction;
             this.clientStore = clientStore;
             this.schemeProvider = schemeProvider;
@@ -133,15 +135,20 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
                     {
                         return Redirect(model.ReturnUrl);
                     }
-                    else if (string.IsNullOrEmpty(model.ReturnUrl))
+
+                    var defaultClient = await defaultClientProvider.GetDefaultClientAsync();
+                    if (defaultClient != null && defaultClient.RedirectUris.Any())
+                    {
+                        return Redirect(defaultClient.RedirectUris.First());
+                    }
+
+                    if (string.IsNullOrEmpty(model.ReturnUrl))
                     {
                         return Redirect("~/");
                     }
-                    else
-                    {
-                        // user might have clicked on a malicious link - should be logged
-                        throw new Exception("invalid return URL");
-                    }
+                    
+                    // user might have clicked on a malicious link - should be logged
+                    throw new Exception("invalid return URL");
                 }
 
                 await events.RaiseAsync(new UserLoginFailureEvent(model.Username, "invalid credentials", clientId:context?.Client.ClientId));
