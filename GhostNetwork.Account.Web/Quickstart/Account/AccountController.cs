@@ -200,7 +200,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
                         model.LastName));
 
                     await SendConfirmationEmailAsync(user);
-                    return RedirectToAction("Login", "Account");
+                    return View("PostRegistration");
                 }
             }
 
