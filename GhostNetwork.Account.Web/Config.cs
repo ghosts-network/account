@@ -37,6 +37,7 @@ namespace GhostNetwork.Account.Web
                 AllowedScopes = new List<string> {"openid", "profile", "api"},
                 RedirectUris = new List<string> {"http://localhost:4200/auth-callback"},
                 PostLogoutRedirectUris = new List<string> {"http://localhost:4200/"},
+                ClientUri = "http://localhost:4200",
                 AllowedCorsOrigins = new List<string> {"http://localhost:4200"},
                 AllowAccessTokensViaBrowser = true
             },
@@ -72,6 +73,7 @@ namespace GhostNetwork.Account.Web
                 AllowedScopes = new List<string> {"openid", "profile", "api"},
                 RedirectUris = new List<string> {"https://gn.boberneprotiv.com/auth-callback"},
                 PostLogoutRedirectUris = new List<string> {"https://gn.boberneprotiv.com/"},
+                ClientUri = "https://gn.boberneprotiv.com",
                 AllowedCorsOrigins = new List<string> {"https://gn.boberneprotiv.com"},
                 AllowAccessTokensViaBrowser = true
             },

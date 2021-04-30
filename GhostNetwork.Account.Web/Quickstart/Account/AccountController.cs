@@ -136,10 +136,10 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
                         return Redirect(model.ReturnUrl);
                     }
 
-                    var defaultClient = await defaultClientProvider.GetDefaultClientAsync();
-                    if (defaultClient != null && defaultClient.RedirectUris.Any())
+                    var redirectUrl = await defaultClientProvider.GetUrlAsync();
+                    if (redirectUrl != null)
                     {
-                        return Redirect(defaultClient.RedirectUris.First());
+                        return Redirect(redirectUrl);
                     }
 
                     if (string.IsNullOrEmpty(model.ReturnUrl))

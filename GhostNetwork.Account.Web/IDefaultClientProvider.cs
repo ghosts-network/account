@@ -6,7 +6,7 @@ namespace GhostNetwork.Account.Web
 {
     public interface IDefaultClientProvider
     {
-        Task<Client> GetDefaultClientAsync();
+        Task<string> GetUrlAsync();
     }
 
     public class DefaultClientProvider : IDefaultClientProvider
@@ -18,10 +18,10 @@ namespace GhostNetwork.Account.Web
             this.clientKey = clientKey;
         }
 
-        public Task<Client> GetDefaultClientAsync()
+        public Task<string> GetUrlAsync()
         {
-            var client = Config.Clients.SingleOrDefault(c => c.ClientId == clientKey);
-            return Task.FromResult(client);
+            var client = Config.Clients.First(c => c.ClientId == clientKey);
+            return Task.FromResult(client.ClientUri);
         }
     }
 }
