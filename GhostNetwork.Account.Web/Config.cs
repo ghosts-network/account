@@ -31,6 +31,17 @@ namespace GhostNetwork.Account.Web
         {
             new Client
             {
+                ClientId = "ios_app",
+                ClientName = "IOS Client",
+                AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
+                AllowedScopes = new List<string> {"openid", "profile", "api"},
+                ClientSecrets = new List<Secret>
+                {
+                    new Secret("temp_secret".Sha256())
+                }
+            },
+            new Client
+            {
                 ClientId = "angular_spa",
                 ClientName = "Angular Client",
                 AllowedGrantTypes = GrantTypes.Implicit,
