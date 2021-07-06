@@ -16,6 +16,8 @@ namespace GhostNetwork.Account.Web
 {
     public class Startup
     {
+        private const string DefaultDbName = "account";
+        
         public IWebHostEnvironment Environment { get; }
         public IConfiguration Configuration { get; }
 
@@ -52,12 +54,13 @@ namespace GhostNetwork.Account.Web
 
             services.AddControllersWithViews();
 
+            var mongoUrl = MongoUrl.Create(Configuration["MONGO_ADDRESS"]);
             services.AddIdentity<IdentityUser, IdentityRole>(options =>
                 {
                     options.User.RequireUniqueEmail = true;
                     options.SignIn.RequireConfirmedEmail = true;
                 })
-                .AddMongoDbStores<IdentityDbContext<string>>(new MongoOptions(MongoClientSettings.FromConnectionString(Configuration["MONGO_ADDRESS"]), "account"))
+                .AddMongoDbStores<IdentityDbContext<string>>(new MongoOptions(MongoClientSettings.FromUrl(mongoUrl), mongoUrl.DatabaseName ?? DefaultDbName))
                 .AddDefaultTokenProviders();
 
             var builder = services.AddIdentityServer(options =>
