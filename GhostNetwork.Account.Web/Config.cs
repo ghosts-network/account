@@ -72,8 +72,16 @@ namespace GhostNetwork.Account.Web
 
                 AllowedGrantTypes = GrantTypes.Code,
 
-                RedirectUris = new List<string> {"https://api.gn.boberneprotiv.com/swagger/oauth2-redirect.html"},
-                AllowedCorsOrigins = new List<string> {"https://api.gn.boberneprotiv.com"},
+                RedirectUris = new List<string>
+                {
+                    "https://api.gn.boberneprotiv.com/swagger/oauth2-redirect.html",
+                    "https://api.stg.gn.boberneprotiv.com/swagger/oauth2-redirect.html"
+                },
+                AllowedCorsOrigins = new List<string>
+                {
+                    "https://api.gn.boberneprotiv.com",
+                    "https://api.stg.gn.boberneprotiv.com"
+                },
                 AllowedScopes = new List<string> {"openid", "profile", "api"}
             },
             new Client
@@ -82,22 +90,22 @@ namespace GhostNetwork.Account.Web
                 ClientName = "Angular Client",
                 AllowedGrantTypes = GrantTypes.Implicit,
                 AllowedScopes = new List<string> {"openid", "profile", "api"},
-                RedirectUris = new List<string> {"https://gn.boberneprotiv.com/auth-callback"},
-                PostLogoutRedirectUris = new List<string> {"https://gn.boberneprotiv.com/"},
-                ClientUri = "https://gn.boberneprotiv.com",
-                AllowedCorsOrigins = new List<string> {"https://gn.boberneprotiv.com"},
-                AllowAccessTokensViaBrowser = true
-            },
-            new Client
-            {
-                ClientId = "api_tests",
-                ClientName = "Api tests",
-                AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
-                ClientSecrets =
+                RedirectUris = new List<string>
                 {
-                    new Secret("secret".Sha256())
+                    "https://gn.boberneprotiv.com/auth-callback",
+                    "https://gn.stg.boberneprotiv.com/auth-callback"
                 },
-                AllowedScopes = new List<string> {"openid", "profile", "api"}
+                PostLogoutRedirectUris = new List<string>
+                {
+                    "https://gn.boberneprotiv.com/",
+                    "https://stg.gn.boberneprotiv.com/"
+                },
+                AllowedCorsOrigins = new List<string>
+                {
+                    "https://gn.boberneprotiv.com",
+                    "https://stg.gn.boberneprotiv.com"
+                },
+                AllowAccessTokensViaBrowser = true
             }
         };
 
