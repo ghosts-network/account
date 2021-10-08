@@ -74,13 +74,11 @@ namespace GhostNetwork.Account.Web
 
                 RedirectUris = new List<string>
                 {
-                    "https://api.gn.boberneprotiv.com/swagger/oauth2-redirect.html",
-                    "https://api.stg.gn.boberneprotiv.com/swagger/oauth2-redirect.html"
+                    "https://api.ghost-network.boberneprotiv.com/swagger/oauth2-redirect.html"
                 },
                 AllowedCorsOrigins = new List<string>
                 {
-                    "https://api.gn.boberneprotiv.com",
-                    "https://api.stg.gn.boberneprotiv.com"
+                    "https://api.ghost-network.boberneprotiv.com"
                 },
                 AllowedScopes = new List<string> {"openid", "profile", "api"}
             },
@@ -92,18 +90,15 @@ namespace GhostNetwork.Account.Web
                 AllowedScopes = new List<string> {"openid", "profile", "api"},
                 RedirectUris = new List<string>
                 {
-                    "https://gn.boberneprotiv.com/auth-callback",
-                    "https://gn.stg.boberneprotiv.com/auth-callback"
+                    "https://ghost-network.boberneprotiv.com/auth-callback"
                 },
                 PostLogoutRedirectUris = new List<string>
                 {
-                    "https://gn.boberneprotiv.com/",
-                    "https://stg.gn.boberneprotiv.com/"
+                    "https://ghost-network.boberneprotiv.com/"
                 },
                 AllowedCorsOrigins = new List<string>
                 {
-                    "https://gn.boberneprotiv.com",
-                    "https://stg.gn.boberneprotiv.com"
+                    "https://ghost-network.boberneprotiv.com"
                 },
                 AllowAccessTokensViaBrowser = true
             }
