@@ -2,10 +2,10 @@
 using GhostNetwork.Account.Web.Services.EmailSender;
 using GhostNetwork.AspNetCore.Identity.Mongo;
 using GhostNetwork.Profiles.Api;
+using IdentityServer4.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,7 +31,7 @@ namespace GhostNetwork.Account.Web
         {
             if (Configuration["EMAIL_SENDER"] == "SMTP")
             {
-                services.AddScoped<IEmailSender, SmtpEmailSender>(provider =>
+                services.AddScoped<IEmailSender, SmtpEmailSender>(_ =>
                 {
                     var config = new SmtpClientConfiguration(Configuration["SMTP_HOST"],
                         Configuration.GetValue<int>("SMTP_POST"),
@@ -48,9 +48,9 @@ namespace GhostNetwork.Account.Web
                 services.AddScoped<IEmailSender, NullEmailSender>();
             }
             
-            services.AddScoped<IDefaultClientProvider>(provider => new DefaultClientProvider(Configuration["DEFAULT_CLIENT"]));
+            services.AddScoped<IDefaultClientProvider>(_ => new DefaultClientProvider(Configuration["DEFAULT_CLIENT"]));
 
-            services.AddScoped<IProfilesApi>(provider => new ProfilesApi(Configuration["PROFILES_ADDRESS"]));
+            services.AddScoped<IProfilesApi>(_ => new ProfilesApi(Configuration["PROFILES_ADDRESS"]));
 
             services.AddControllersWithViews();
 
@@ -100,22 +100,19 @@ namespace GhostNetwork.Account.Web
 
         public void Configure(IApplicationBuilder app)
         {
+            if (!string.IsNullOrEmpty(Configuration["Host"]))
+            {
+                app.Use(async (ctx, next) =>
+                {
+                    ctx.SetIdentityServerOrigin(Configuration["Host"]);
+                    await next();
+                });
+            }
+
             if (Environment.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
-            
-            var forwardOptions = new ForwardedHeadersOptions
-            {
-                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
-                RequireHeaderSymmetry = false
-            };
-
-            forwardOptions.KnownNetworks.Clear();
-            forwardOptions.KnownProxies.Clear();
-
-            // ref: https://github.com/aspnet/Docs/issues/2384
-            app.UseForwardedHeaders(forwardOptions);
 
             app.UseStaticFiles();
 
