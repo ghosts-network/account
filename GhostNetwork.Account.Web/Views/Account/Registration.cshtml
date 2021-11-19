@@ -1,14 +1,19 @@
 @model GhostNetwork.Account.Web.Quickstart.Account.RegistrationInputModel
 
 <div class="login-page">
-    <div class="lead">
-        <h1>Registration</h1>
-        <p>Create new account</p>
+
+    <div class="row d-flex justify-content-center">
+        <div class="col-sm-6">
+            <div class="lead">
+                <h1>Welcome</h1>
+                <p>Fill out the form to get started</p>
+            </div>
+        </div>
     </div>
 
-    <partial name="_ValidationSummary" />
+    <partial name="_ValidationSummary"/>
 
-    <div class="row">
+    <div class="row d-flex justify-content-center">
         <div class="col-sm-6">
             <div class="card">
                 <div class="card-header">
@@ -37,8 +42,16 @@
                             <label asp-for="PasswordConfirm"></label>
                             <input type="password" class="form-control" placeholder="PasswordConfirm" asp-for="PasswordConfirm" autocomplete="off">
                         </div>
-                        <button class="btn btn-primary" name="button" value="submit">Submit</button>
-                        <button class="btn btn-secondary" name="button" value="cancel">Cancel</button>
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                Already have an account?
+                                <a asp-controller="Account" asp-action="Login">Login</a>
+                            </div>
+                            <div>
+                                <button class="btn btn-secondary" name="button" value="cancel">Cancel</button>
+                                <button class="btn btn-primary" name="button" value="submit">Submit</button>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
