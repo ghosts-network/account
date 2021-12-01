@@ -1,8 +1,8 @@
-﻿using IdentityServer4.Models;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Security.Claims;
-using IdentityModel;
 using IdentityServer4.Test;
+using IdentityServer4.Models;
+using IdentityModel;
 
 namespace GhostNetwork.Account.Web
 {
@@ -45,18 +45,18 @@ namespace GhostNetwork.Account.Web
                 ClientId = "angular_spa",
                 ClientName = "Angular Client",
                 AllowedGrantTypes = GrantTypes.Implicit,
-                AllowedScopes = new List<string> {"openid", "profile", "api"},
-                RedirectUris = new List<string> {"http://localhost:4200/auth-callback"},
-                PostLogoutRedirectUris = new List<string> {"http://localhost:4200/"},
+                AllowedScopes = new List<string> { "openid", "profile", "api" },
+                RedirectUris = new List<string> { "http://localhost:4200/auth-callback" },
+                PostLogoutRedirectUris = new List<string> { "http://localhost:4200/" },
                 ClientUri = "http://localhost:4200",
-                AllowedCorsOrigins = new List<string> {"http://localhost:4200"},
+                AllowedCorsOrigins = new List<string> { "http://localhost:4200" },
                 AllowAccessTokensViaBrowser = true
             },
             new Client
             {
                 ClientId = "swagger_local",
                 ClientName = "Swagger Local",
-                ClientSecrets = {new Secret("secret".Sha256())},
+                ClientSecrets = { new Secret("secret".Sha256()) },
 
                 AllowedGrantTypes = GrantTypes.Code,
 
@@ -68,7 +68,7 @@ namespace GhostNetwork.Account.Web
             {
                 ClientId = "swagger_prod",
                 ClientName = "Swagger Prod",
-                ClientSecrets = {new Secret("secret".Sha256())},
+                ClientSecrets = { new Secret("secret".Sha256()) },
 
                 AllowedGrantTypes = GrantTypes.Code,
 

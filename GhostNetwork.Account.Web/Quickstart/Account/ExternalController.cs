@@ -140,7 +140,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             return Redirect(returnUrl);
         }
 
-        private (TestUser user, string provider, string providerUserId, IEnumerable<Claim> claims) FindUserFromExternalProvider(AuthenticateResult result)
+        private (TestUser User, string Provider, string ProviderUserId, IEnumerable<Claim> Claims) FindUserFromExternalProvider(AuthenticateResult result)
         {
             var externalUser = result.Principal;
 

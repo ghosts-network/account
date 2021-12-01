@@ -28,68 +28,91 @@ namespace GhostNetwork.AspNetCore.Identity.Mongo
             this.context = context;
         }
 
-        public override IQueryable<TUser> Users => users.AsQueryable();
+        public override IQueryable<TUser> Users => UsersCollection.AsQueryable();
 
-        public override async Task AddClaimsAsync(TUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken = default)
+        private IMongoCollection<TUser> UsersCollection => context.Collection<TUser>("users");
+
+        private IMongoCollection<TRole> Roles => context.Collection<TRole>("roles");
+
+        private IMongoCollection<TUserRole> UserRoles => context.Collection<TUserRole>("userRoles");
+
+        private IMongoCollection<TUserClaim> UserClaims => context.Collection<TUserClaim>("userClaims");
+
+        private IMongoCollection<TUserLogin> UserLogins => context.Collection<TUserLogin>("userLogins");
+
+        private IMongoCollection<TUserToken> UserTokens => context.Collection<TUserToken>("userTokens");
+
+        public override async Task AddClaimsAsync(
+            TUser user,
+            IEnumerable<Claim> claims,
+            CancellationToken cancellationToken = default)
         {
-            await userClaims.InsertManyAsync(claims.Select(c => new TUserClaim
-            {
-                UserId = user.Id,
-                ClaimType = c.Type,
-                ClaimValue = c.Value
-            }), cancellationToken: cancellationToken);
+            await UserClaims.InsertManyAsync(
+                claims
+                    .Select(c => new TUserClaim
+                    {
+                        UserId = user.Id,
+                        ClaimType = c.Type,
+                        ClaimValue = c.Value
+                    }),
+                cancellationToken: cancellationToken);
         }
 
-        public override async Task AddLoginAsync(TUser user, UserLoginInfo login, CancellationToken cancellationToken = default)
+        public override async Task AddLoginAsync(
+            TUser user,
+            UserLoginInfo login,
+            CancellationToken cancellationToken = default)
         {
-            await userLogins.InsertOneAsync(new TUserLogin
-            {
-                UserId = user.Id,
-                LoginProvider = login.LoginProvider,
-                ProviderDisplayName = login.ProviderDisplayName,
-                ProviderKey = login.ProviderKey
-            }, cancellationToken: cancellationToken);
+            await UserLogins.InsertOneAsync(
+                new TUserLogin
+                {
+                    UserId = user.Id,
+                    LoginProvider = login.LoginProvider,
+                    ProviderDisplayName = login.ProviderDisplayName,
+                    ProviderKey = login.ProviderKey
+                },
+                cancellationToken: cancellationToken);
         }
 
         public override async Task<IdentityResult> CreateAsync(TUser user, CancellationToken cancellationToken = default)
         {
-            await users.InsertOneAsync(user, cancellationToken: cancellationToken);
+            await UsersCollection.InsertOneAsync(user, cancellationToken: cancellationToken);
 
             return IdentityResult.Success;
         }
 
         public override async Task<IdentityResult> DeleteAsync(TUser user, CancellationToken cancellationToken = default)
         {
-            await users.DeleteOneAsync(userFilter.Eq(u => u.Id, user.Id), cancellationToken);
+            await UsersCollection.DeleteOneAsync(Builders<TUser>.Filter.Eq(u => u.Id, user.Id), cancellationToken);
 
             return IdentityResult.Success;
         }
 
         public override async Task<TUser> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken = default)
         {
-            return await users
-                .Find(userFilter.Eq(u => u.NormalizedEmail, normalizedEmail))
+            return await UsersCollection
+                .Find(Builders<TUser>.Filter.Eq(u => u.NormalizedEmail, normalizedEmail))
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
         public override async Task<TUser> FindByIdAsync(string userId, CancellationToken cancellationToken = default)
         {
-            return await users
-                .Find(userFilter.Eq(u => u.Id, ConvertIdFromString(userId)))
+            return await UsersCollection
+                .Find(Builders<TUser>.Filter.Eq(u => u.Id, ConvertIdFromString(userId)))
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
         public override async Task<TUser> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken = default)
         {
-            return await users
-                .Find(userFilter.Eq(u => u.NormalizedUserName, normalizedUserName))
+            return await UsersCollection
+                .Find(Builders<TUser>.Filter.Eq(u => u.NormalizedUserName, normalizedUserName))
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
         public override async Task<IList<Claim>> GetClaimsAsync(TUser user, CancellationToken cancellationToken = default)
         {
-            var ucs = await userClaims
-                .Find(userClaimFilter.Eq(u => u.UserId, user.Id))
+            var ucs = await UserClaims
+                .Find(Builders<TUserClaim>.Filter.Eq(u => u.UserId, user.Id))
                 .ToListAsync(cancellationToken);
 
             return ucs.Select(cs => cs.ToClaim()).ToList();
@@ -97,8 +120,8 @@ namespace GhostNetwork.AspNetCore.Identity.Mongo
 
         public override async Task<IList<UserLoginInfo>> GetLoginsAsync(TUser user, CancellationToken cancellationToken = default)
         {
-            var uls = await userLogins
-                .Find(userLoginFilter.Eq(u => u.UserId, user.Id))
+            var uls = await UserLogins
+                .Find(Builders<TUserLogin>.Filter.Eq(u => u.UserId, user.Id))
                 .ToListAsync(cancellationToken);
 
             return uls.Select(ul => new UserLoginInfo(ul.LoginProvider, ul.ProviderKey, ul.ProviderDisplayName)).ToList();
@@ -106,185 +129,178 @@ namespace GhostNetwork.AspNetCore.Identity.Mongo
 
         public override async Task<IList<TUser>> GetUsersForClaimAsync(Claim claim, CancellationToken cancellationToken = default)
         {
-            var claimFilter = userClaimFilter.And(
-                userClaimFilter.Eq(uc => uc.ClaimValue, claim.Value),
-                userClaimFilter.Eq(uc => uc.ClaimType, claim.Type));
+            var claimFilter = Builders<TUserClaim>.Filter.And(
+                Builders<TUserClaim>.Filter.Eq(uc => uc.ClaimValue, claim.Value),
+                Builders<TUserClaim>.Filter.Eq(uc => uc.ClaimType, claim.Type));
 
-            var ucs = await userClaims
+            var ucs = await UserClaims
                 .Find(claimFilter)
                 .ToListAsync(cancellationToken);
 
-            return await users
-                .Find(userFilter.In(u => u.Id, ucs.Select(uc => uc.UserId)))
+            return await UsersCollection
+                .Find(Builders<TUser>.Filter.In(u => u.Id, ucs.Select(uc => uc.UserId)))
                 .ToListAsync(cancellationToken);
         }
 
         public override async Task RemoveClaimsAsync(TUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken = default)
         {
-            var claimsFilter = userClaimFilter.Or(claims.Select(c => userClaimFilter.And(
-                userClaimFilter.Eq(uc => uc.ClaimValue, c.Value),
-                userClaimFilter.Eq(uc => uc.ClaimType, c.Type))));
+            var claimsFilter = Builders<TUserClaim>.Filter.Or(claims.Select(c => Builders<TUserClaim>.Filter.And(
+                Builders<TUserClaim>.Filter.Eq(uc => uc.ClaimValue, c.Value),
+                Builders<TUserClaim>.Filter.Eq(uc => uc.ClaimType, c.Type))));
 
-            var filter = userClaimFilter.And(
-                userClaimFilter.Eq(uc => uc.UserId, user.Id),
+            var filter = Builders<TUserClaim>.Filter.And(
+                Builders<TUserClaim>.Filter.Eq(uc => uc.UserId, user.Id),
                 claimsFilter);
 
-            await userClaims.DeleteManyAsync(filter, cancellationToken);
+            await UserClaims.DeleteManyAsync(filter, cancellationToken);
         }
 
         public override async Task RemoveLoginAsync(TUser user, string loginProvider, string providerKey, CancellationToken cancellationToken = default)
         {
-            var filter = userLoginFilter.And(
-                userLoginFilter.Eq(ul => ul.UserId, user.Id),
-                userLoginFilter.Eq(ul => ul.LoginProvider, loginProvider),
-                userLoginFilter.Eq(ul => ul.ProviderKey, providerKey));
+            var filter = Builders<TUserLogin>.Filter.And(
+                Builders<TUserLogin>.Filter.Eq(ul => ul.UserId, user.Id),
+                Builders<TUserLogin>.Filter.Eq(ul => ul.LoginProvider, loginProvider),
+                Builders<TUserLogin>.Filter.Eq(ul => ul.ProviderKey, providerKey));
 
-            await userLogins.DeleteOneAsync(filter, cancellationToken);
+            await UserLogins.DeleteOneAsync(filter, cancellationToken);
         }
 
-        public override async Task ReplaceClaimAsync(TUser user, Claim claim, Claim newClaim, CancellationToken cancellationToken = default)
+        public override async Task ReplaceClaimAsync(
+            TUser user,
+            Claim claim,
+            Claim newClaim,
+            CancellationToken cancellationToken = default)
         {
-            var filter = userClaimFilter.And(
-                userClaimFilter.Eq(uc => uc.UserId, user.Id),
-                userClaimFilter.Eq(uc => uc.ClaimValue, claim.Value),
-                userClaimFilter.Eq(uc => uc.ClaimType, claim.Type));
+            var filter = Builders<TUserClaim>.Filter.And(
+                Builders<TUserClaim>.Filter.Eq(uc => uc.UserId, user.Id),
+                Builders<TUserClaim>.Filter.Eq(uc => uc.ClaimValue, claim.Value),
+                Builders<TUserClaim>.Filter.Eq(uc => uc.ClaimType, claim.Type));
 
-            await userClaims.ReplaceOneAsync(filter, new TUserClaim
-            {
-                UserId = user.Id,
-                ClaimType = claim.Type,
-                ClaimValue = claim.Value
-            }, cancellationToken: cancellationToken);
+            await UserClaims.ReplaceOneAsync(
+                filter,
+                new TUserClaim
+                {
+                    UserId = user.Id,
+                    ClaimType = claim.Type,
+                    ClaimValue = claim.Value
+                },
+                cancellationToken: cancellationToken);
         }
 
         public override async Task<IdentityResult> UpdateAsync(TUser user, CancellationToken cancellationToken = default)
         {
-            var filter = userFilter.Eq(u => u.Id, user.Id);
+            var filter = Builders<TUser>.Filter.Eq(u => u.Id, user.Id);
 
-            await users.ReplaceOneAsync(filter, user, cancellationToken: cancellationToken);
+            await UsersCollection.ReplaceOneAsync(filter, user, cancellationToken: cancellationToken);
 
             return IdentityResult.Success;
         }
 
-        protected override async Task AddUserTokenAsync(TUserToken token)
-        {
-            await userTokens.InsertOneAsync(token);
-        }
-
-        protected override async Task<TUserToken> FindTokenAsync(TUser user, string loginProvider, string name, CancellationToken cancellationToken)
-        {
-            var filter = userTokenFilter.And(
-                userTokenFilter.Eq(u => u.LoginProvider, loginProvider),
-                userTokenFilter.Eq(u => u.Name, name),
-                userTokenFilter.Eq(u => u.UserId, user.Id));
-
-            return await userTokens.Find(filter).FirstOrDefaultAsync(cancellationToken);
-        }
-
-        protected override async Task<TUser> FindUserAsync(TKey userId, CancellationToken cancellationToken)
-        {
-            var filter = userFilter.Eq(u => u.Id, userId);
-
-            return await users.Find(filter).FirstOrDefaultAsync(cancellationToken);
-        }
-
-        protected override async Task<TUserLogin> FindUserLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken)
-        {
-            var filter = userLoginFilter.And(
-                userLoginFilter.Eq(u => u.LoginProvider, loginProvider),
-                userLoginFilter.Eq(u => u.ProviderKey, providerKey));
-
-            return await userLogins.Find(filter).FirstOrDefaultAsync(cancellationToken);
-        }
-
-        protected override async Task<TUserLogin> FindUserLoginAsync(TKey userId, string loginProvider, string providerKey, CancellationToken cancellationToken)
-        {
-            var filter = userLoginFilter.And(
-                userLoginFilter.Eq(u => u.UserId, userId),
-                userLoginFilter.Eq(u => u.LoginProvider, loginProvider),
-                userLoginFilter.Eq(u => u.ProviderKey, providerKey));
-
-            return await userLogins.Find(filter).FirstOrDefaultAsync(cancellationToken);
-        }
-
-        protected override async Task RemoveUserTokenAsync(TUserToken token)
-        {
-            var filter = userTokenFilter.And(
-                userTokenFilter.Eq(ul => ul.UserId, token.UserId),
-                userTokenFilter.Eq(ul => ul.LoginProvider, token.LoginProvider));
-
-            await userTokens.DeleteOneAsync(filter);
-        }
-
         public async Task AddToRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
         {
-            var role = await roles.Find(roleFilter.Eq(r => r.NormalizedName, roleName)).FirstAsync(cancellationToken);
+            var role = await Roles
+                .Find(Builders<TRole>.Filter.Eq(r => r.NormalizedName, roleName))
+                .FirstAsync(cancellationToken);
 
-            await userRoles.InsertOneAsync(new TUserRole
-            {
-                UserId = user.Id,
-                RoleId = role.Id
-            }, cancellationToken: cancellationToken);
+            await UserRoles.InsertOneAsync(
+                new TUserRole
+                {
+                    UserId = user.Id,
+                    RoleId = role.Id
+                },
+                cancellationToken: cancellationToken);
         }
 
         public async Task<IList<string>> GetRolesAsync(TUser user, CancellationToken cancellationToken)
         {
-            var urs = await userRoles.Find(userRoleFilter.Eq(ur => ur.UserId, user.Id)).ToListAsync(cancellationToken);
-            var rs = await roles.Find(roleFilter.In(r => r.Id, urs.Select(ur => ur.RoleId))).ToListAsync(cancellationToken);
+            var urs = await UserRoles.Find(Builders<TUserRole>.Filter.Eq(ur => ur.UserId, user.Id)).ToListAsync(cancellationToken);
+            var rs = await Roles.Find(Builders<TRole>.Filter.In(r => r.Id, urs.Select(ur => ur.RoleId))).ToListAsync(cancellationToken);
 
             return rs.Select(r => r.Name).ToList();
         }
 
         public async Task<IList<TUser>> GetUsersInRoleAsync(string roleName, CancellationToken cancellationToken)
         {
-            var role = await roles.Find(roleFilter.Eq(r => r.NormalizedName, roleName)).FirstAsync(cancellationToken);
-            var urs = await userRoles
-                .Find(userRoleFilter.Eq(ur => ur.RoleId, role.Id))
+            var role = await Roles.Find(Builders<TRole>.Filter.Eq(r => r.NormalizedName, roleName)).FirstAsync(cancellationToken);
+            var urs = await UserRoles
+                .Find(Builders<TUserRole>.Filter.Eq(ur => ur.RoleId, role.Id))
                 .ToListAsync(cancellationToken);
 
-            return await users.Find(userFilter.In(r => r.Id, urs.Select(ur => ur.UserId))).ToListAsync(cancellationToken);
+            return await UsersCollection.Find(Builders<TUser>.Filter.In(r => r.Id, urs.Select(ur => ur.UserId))).ToListAsync(cancellationToken);
         }
 
         public async Task<bool> IsInRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
         {
-            var role = await roles.Find(roleFilter.Eq(r => r.NormalizedName, roleName))
+            var role = await Roles.Find(Builders<TRole>.Filter.Eq(r => r.NormalizedName, roleName))
                 .FirstAsync(cancellationToken);
 
-            var filter = userRoleFilter.And(
-                userRoleFilter.Eq(ur => ur.UserId, user.Id),
-                userRoleFilter.Eq(ur => ur.RoleId, role.Id));
+            var filter = Builders<TUserRole>.Filter.And(
+                Builders<TUserRole>.Filter.Eq(ur => ur.UserId, user.Id),
+                Builders<TUserRole>.Filter.Eq(ur => ur.RoleId, role.Id));
 
-            return await userRoles
+            return await UserRoles
                 .Find(filter)
                 .AnyAsync(cancellationToken);
         }
 
         public async Task RemoveFromRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
         {
-            var role = await roles.Find(roleFilter.Eq(r => r.NormalizedName, roleName)).FirstAsync(cancellationToken);
+            var role = await Roles.Find(Builders<TRole>.Filter.Eq(r => r.NormalizedName, roleName)).FirstAsync(cancellationToken);
 
-            var filter = userRoleFilter.And(
-                userRoleFilter.Eq(ur => ur.UserId, user.Id),
-                userRoleFilter.Eq(ur => ur.RoleId, role.Id));
-            await userRoles.DeleteOneAsync(filter, cancellationToken);
+            var filter = Builders<TUserRole>.Filter.And(
+                Builders<TUserRole>.Filter.Eq(ur => ur.UserId, user.Id),
+                Builders<TUserRole>.Filter.Eq(ur => ur.RoleId, role.Id));
+            await UserRoles.DeleteOneAsync(filter, cancellationToken);
         }
 
-        private IMongoCollection<TUser> users => context.Collection<TUser>("users");
-        private readonly FilterDefinitionBuilder<TUser> userFilter = Builders<TUser>.Filter;
+        protected override async Task RemoveUserTokenAsync(TUserToken token)
+        {
+            var filter = Builders<TUserToken>.Filter.And(
+                Builders<TUserToken>.Filter.Eq(ul => ul.UserId, token.UserId),
+                Builders<TUserToken>.Filter.Eq(ul => ul.LoginProvider, token.LoginProvider));
 
-        private IMongoCollection<TRole> roles => context.Collection<TRole>("roles");
-        private readonly FilterDefinitionBuilder<TRole> roleFilter = Builders<TRole>.Filter;
+            await UserTokens.DeleteOneAsync(filter);
+        }
 
-        private IMongoCollection<TUserRole> userRoles => context.Collection<TUserRole>("userRoles");
-        private readonly FilterDefinitionBuilder<TUserRole> userRoleFilter = Builders<TUserRole>.Filter;
+        protected override async Task AddUserTokenAsync(TUserToken token)
+        {
+            await UserTokens.InsertOneAsync(token);
+        }
 
-        private IMongoCollection<TUserClaim> userClaims => context.Collection<TUserClaim>("userClaims");
-        private readonly FilterDefinitionBuilder<TUserClaim> userClaimFilter = Builders<TUserClaim>.Filter;
+        protected override async Task<TUserToken> FindTokenAsync(TUser user, string loginProvider, string name, CancellationToken cancellationToken)
+        {
+            var filter = Builders<TUserToken>.Filter.And(
+                Builders<TUserToken>.Filter.Eq(u => u.LoginProvider, loginProvider),
+                Builders<TUserToken>.Filter.Eq(u => u.Name, name),
+                Builders<TUserToken>.Filter.Eq(u => u.UserId, user.Id));
 
-        private IMongoCollection<TUserLogin> userLogins => context.Collection<TUserLogin>("userLogins");
-        private readonly FilterDefinitionBuilder<TUserLogin> userLoginFilter = Builders<TUserLogin>.Filter;
+            return await UserTokens.Find(filter).FirstOrDefaultAsync(cancellationToken);
+        }
 
-        private IMongoCollection<TUserToken> userTokens => context.Collection<TUserToken>("userTokens");
-        private readonly FilterDefinitionBuilder<TUserToken> userTokenFilter = Builders<TUserToken>.Filter;
+        protected override async Task<TUser> FindUserAsync(TKey userId, CancellationToken cancellationToken)
+        {
+            var filter = Builders<TUser>.Filter.Eq(u => u.Id, userId);
+
+            return await UsersCollection.Find(filter).FirstOrDefaultAsync(cancellationToken);
+        }
+
+        protected override async Task<TUserLogin> FindUserLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken)
+        {
+            var filter = Builders<TUserLogin>.Filter.And(
+                Builders<TUserLogin>.Filter.Eq(u => u.LoginProvider, loginProvider),
+                Builders<TUserLogin>.Filter.Eq(u => u.ProviderKey, providerKey));
+
+            return await UserLogins.Find(filter).FirstOrDefaultAsync(cancellationToken);
+        }
+
+        protected override async Task<TUserLogin> FindUserLoginAsync(TKey userId, string loginProvider, string providerKey, CancellationToken cancellationToken)
+        {
+            var filter = Builders<TUserLogin>.Filter.And(
+                Builders<TUserLogin>.Filter.Eq(u => u.UserId, userId),
+                Builders<TUserLogin>.Filter.Eq(u => u.LoginProvider, loginProvider),
+                Builders<TUserLogin>.Filter.Eq(u => u.ProviderKey, providerKey));
+
+            return await UserLogins.Find(filter).FirstOrDefaultAsync(cancellationToken);
+        }
     }
 }
