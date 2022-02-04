@@ -1,6 +1,6 @@
 using System;
+using Duende.IdentityServer.Models;
 using GhostNetwork.Account.Web.Quickstart.Account;
-using IdentityServer4.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GhostNetwork.Account.Web.Quickstart
@@ -21,7 +21,7 @@ namespace GhostNetwork.Account.Web.Quickstart
         {
             controller.HttpContext.Response.StatusCode = 200;
             controller.HttpContext.Response.Headers["Location"] = "";
-            
+
             return controller.View(viewName, new RedirectViewModel { RedirectUrl = redirectUri });
         }
     }

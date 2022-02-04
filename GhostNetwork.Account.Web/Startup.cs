@@ -1,8 +1,9 @@
-﻿using GhostNetwork.Account.Web.Services;
+﻿using Duende.IdentityServer.Extensions;
+using Duende.IdentityServer.Services;
+using GhostNetwork.Account.Web.Services;
 using GhostNetwork.Account.Web.Services.EmailSender;
 using GhostNetwork.AspNetCore.Identity.Mongo;
 using GhostNetwork.Profiles.Api;
-using IdentityServer4.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -92,9 +93,6 @@ namespace GhostNetwork.Account.Web
                 options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             });
 
-            // not recommended for production - you need to store your key material somewhere secure
-            builder.AddDeveloperSigningCredential();
-
             services.AddAuthentication();
         }
 
@@ -104,7 +102,7 @@ namespace GhostNetwork.Account.Web
             {
                 app.Use(async (ctx, next) =>
                 {
-                    ctx.SetIdentityServerOrigin(Configuration["Host"]);
+                    IServerUrls.Origin = Configuration["Host"];
                     await next();
                 });
             }

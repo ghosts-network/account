@@ -6,9 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Duende.IdentityServer" Version="6.0.4" />
+    <PackageReference Include="Duende.IdentityServer.AspNetIdentity" Version="6.0.4" />
     <PackageReference Include="GhostNetwork.Profiles" Version="1.1.0" />
-    <PackageReference Include="IdentityServer4" Version="4.0.0" />
-    <PackageReference Include="IdentityServer4.AspNetIdentity" Version="4.0.0" />
     <PackageReference Include="MailKit" Version="2.10.1" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.354">
       <PrivateAssets>all</PrivateAssets>
