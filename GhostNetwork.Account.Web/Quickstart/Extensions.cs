@@ -10,7 +10,7 @@ namespace GhostNetwork.Account.Web.Quickstart
         /// <summary>
         /// Checks if the redirect URI is for a native client.
         /// </summary>
-        /// <returns></returns>
+        /// <param name="context">AuthorizationRequest context.</param>
         public static bool IsNativeClient(this AuthorizationRequest context)
         {
             return !context.RedirectUri.StartsWith("https", StringComparison.Ordinal)

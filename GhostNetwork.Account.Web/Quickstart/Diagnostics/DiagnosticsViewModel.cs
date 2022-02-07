@@ -23,6 +23,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Diagnostics
         }
 
         public AuthenticateResult AuthenticateResult { get; }
+
         public IEnumerable<string> Clients { get; } = new List<string>();
     }
 }

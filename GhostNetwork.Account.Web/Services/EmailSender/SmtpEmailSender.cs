@@ -20,7 +20,7 @@ namespace GhostNetwork.Account.Web.Services.EmailSender
 
             await client.ConnectAsync(configuration.Host, configuration.Port, configuration.EnableSsl);
             await client.AuthenticateAsync(configuration.UserName, configuration.Password);
-            
+
             var emailMessage = new MimeMessage();
             emailMessage.From.Add(new MailboxAddress(configuration.DisplayName, configuration.Email));
             emailMessage.To.Add(new MailboxAddress(recipient.Name, recipient.Email));
@@ -30,7 +30,7 @@ namespace GhostNetwork.Account.Web.Services.EmailSender
                 ContentTransferEncoding = ContentEncoding.Default,
                 Text = body
             };
-            
+
             await client.SendAsync(emailMessage);
             await client.DisconnectAsync(true);
         }

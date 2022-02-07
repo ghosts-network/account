@@ -1,5 +1,4 @@
 ﻿using System;
-using Duende.IdentityServer.Extensions;
 using Duende.IdentityServer.Services;
 using GhostNetwork.Account.Web.Services;
 using GhostNetwork.Account.Web.Services.EmailSender;
@@ -36,7 +35,8 @@ namespace GhostNetwork.Account.Web
             {
                 services.AddScoped<IEmailSender, SmtpEmailSender>(_ =>
                 {
-                    var config = new SmtpClientConfiguration(Configuration["SMTP_HOST"],
+                    var config = new SmtpClientConfiguration(
+                        Configuration["SMTP_HOST"],
                         Configuration.GetValue<int>("SMTP_POST"),
                         Configuration.GetValue<bool>("SMTP_SSL_ENABLED"),
                         Configuration["SMTP_USERNAME"],
@@ -78,7 +78,8 @@ namespace GhostNetwork.Account.Web
 
                 // key management options
                 options.KeyManagement.Enabled = true;
-                options.KeyManagement.KeyPath = "./";
+
+                // options.KeyManagement.KeyPath = "./";
                 options.KeyManagement.RotationInterval = TimeSpan.FromDays(30);
                 options.KeyManagement.PropagationTime = TimeSpan.FromDays(2);
                 options.KeyManagement.RetentionDuration = TimeSpan.FromDays(7);
@@ -112,8 +113,8 @@ namespace GhostNetwork.Account.Web
         {
             if (!string.IsNullOrEmpty(Configuration["Host"]))
             {
-                // TODO fix it
-                app.Use(async (ctx, next) =>
+                // TODO I'm not sure about it
+                app.Use(async (_, next) =>
                 {
                     serverUrls.Origin = Configuration["Host"];
                     await next();

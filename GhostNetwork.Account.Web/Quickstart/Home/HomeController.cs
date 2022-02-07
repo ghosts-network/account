@@ -36,13 +36,14 @@ namespace GhostNetwork.Account.Web.Quickstart.Home
         }
 
         /// <summary>
-        /// Shows the error page
+        /// Shows the error page.
         /// </summary>
+        /// <param name="errorId">Error id.</param>
         public async Task<IActionResult> Error(string errorId)
         {
             var vm = new ErrorViewModel();
 
-            // retrieve error details from identityserver
+            // retrieve error details from identityServer
             var message = await interaction.GetErrorContextAsync(errorId);
             if (message != null)
             {

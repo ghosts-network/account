@@ -35,7 +35,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Grants
         }
 
         /// <summary>
-        /// Show list of grants
+        /// Show list of grants.
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> Index()
@@ -44,8 +44,9 @@ namespace GhostNetwork.Account.Web.Quickstart.Grants
         }
 
         /// <summary>
-        /// Handle postback to revoke a client
+        /// Handle postback to revoke a client.
         /// </summary>
+        /// <param name="clientId">Client id.</param>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Revoke(string clientId)
@@ -61,7 +62,8 @@ namespace GhostNetwork.Account.Web.Quickstart.Grants
             var grants = await interaction.GetAllUserGrantsAsync();
 
             var list = new List<GrantViewModel>();
-            foreach(var grant in grants)
+
+            foreach (var grant in grants)
             {
                 var client = await clients.FindClientByIdAsync(grant.ClientId);
                 if (client != null)

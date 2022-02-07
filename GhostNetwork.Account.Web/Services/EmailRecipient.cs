@@ -9,6 +9,7 @@ namespace GhostNetwork.Account.Web.Services
         }
 
         public string Name { get; }
+
         public string Email { get; }
     }
 }
