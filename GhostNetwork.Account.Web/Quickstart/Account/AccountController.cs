@@ -452,6 +452,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
 
             if (User.Identity?.IsAuthenticated == true)
             {
+                // TODO possible it's broken, not sure. But logOut still work correctly
                 var idp = User.FindFirst(JwtClaimTypes.IdentityProvider)?.Value;
                 if (idp != null && idp != IdentityServerConstants.LocalIdentityProvider)
                 {
