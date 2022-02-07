@@ -1,13 +1,12 @@
 @using System.Diagnostics
 
 @{
-    var version = FileVersionInfo.GetVersionInfo(typeof(Hosting.IdentityServerMiddleware).Assembly.Location).ProductVersion.Split('+').First();
+    var version = FileVersionInfo.GetVersionInfo(typeof(Duende.IdentityServer.Hosting.IdentityServerMiddleware).Assembly.Location).ProductVersion!.Split('+').First();
 }
 
 <div class="welcome-page">
     <h1>
-        <img src="~/icon.jpg">
-        Welcome to IdentityServer4
+        Welcome to Duende IdentityServer
         <small class="text-muted">(version @version)</small>
     </h1>
 
@@ -25,8 +24,9 @@
         </li>
         <li>
             Here are links to the
-            <a href="https://github.com/identityserver/IdentityServer4">source code repository</a>,
-            and <a href="https://github.com/IdentityServer/IdentityServer4/tree/main/samples">ready to use samples</a>.
+            <a href="https://github.com/DuendeSoftware/IdentityServer">source code repository</a>,
+            and <a href="https://docs.duendesoftware.com/identityserver/v6">duende IS documentation</a>
+            also <a href="https://github.com/DuendeSoftware/Samples">ready to use samples</a>.
         </li>
     </ul>
 </div>

@@ -32,6 +32,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
         private readonly IAuthenticationSchemeProvider schemeProvider;
         private readonly IEventService events;
         private readonly IDefaultClientProvider defaultClientProvider;
+        private readonly IAuthenticationHandlerProvider handlerProvider;
 
         public AccountController(
             IIdentityServerInteractionService interaction,
@@ -41,7 +42,9 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
             IEmailSender emailSender,
-            IProfilesApi profilesApi, IDefaultClientProvider defaultClientProvider)
+            IProfilesApi profilesApi,
+            IDefaultClientProvider defaultClientProvider,
+            IAuthenticationHandlerProvider handlerProvider)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
@@ -52,6 +55,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             this.clientStore = clientStore;
             this.schemeProvider = schemeProvider;
             this.events = events;
+            this.handlerProvider = handlerProvider;
         }
 
         /// <summary>
@@ -146,7 +150,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
                     {
                         return Redirect("~/");
                     }
-                    
+
                     // user might have clicked on a malicious link - should be logged
                     throw new Exception("invalid return URL");
                 }
@@ -309,9 +313,8 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             var claims = await userManager.GetClaimsAsync(user);
             var name = claims.FirstOrDefault(c => c.Type == JwtClaimTypes.Name)?.Value ?? user.Email;
             await emailSender.SendEmailAsync(new EmailRecipient(name, user.Email), "Confirm your email", body);
-
         }
-        
+
         private async Task<LoginViewModel> BuildLoginViewModelAsync(string returnUrl)
         {
             var context = await interaction.GetAuthorizationContextAsync(returnUrl);
@@ -421,14 +424,16 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
                 var idp = User.FindFirst(JwtClaimTypes.IdentityProvider)?.Value;
                 if (idp != null && idp != IdentityServerConstants.LocalIdentityProvider)
                 {
-                    var providerSupportsSignout = await HttpContext.GetSchemeSupportsSignOutAsync(idp);
-                    if (providerSupportsSignout)
+                    var handler = await handlerProvider.GetHandlerAsync(HttpContext, idp);
+
+                    // var providerSupportsSignOut = await HttpContext.GetSchemeSupportsSignOutAsync(idp);
+                    if (handler is not null)
                     {
                         if (vm.LogoutId == null)
                         {
                             // if there's no current logout context, we need to create one
                             // this captures necessary info from the current logged in user
-                            // before we signout and redirect away to the external IdP for signout
+                            // before we signOut and redirect away to the external IdP for signOut
                             vm.LogoutId = await interaction.CreateLogoutContextAsync();
                         }
 
