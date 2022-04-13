@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Duende.IdentityServer;
+using Duende.IdentityServer.Events;
+using Duende.IdentityServer.Services;
+using Duende.IdentityServer.Stores;
+using Duende.IdentityServer.Test;
 using IdentityModel;
-using IdentityServer4;
-using IdentityServer4.Events;
-using IdentityServer4.Services;
-using IdentityServer4.Stores;
-using IdentityServer4.Test;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -42,12 +42,18 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
         }
 
         /// <summary>
-        /// initiate roundtrip to external authentication provider
+        /// initiate roundtrip to external authentication provider.
         /// </summary>
+        /// <param name="scheme">scheme.</param>
+        /// <param name="returnUrl">returnUrl.</param>
+        /// <returns>Challenge.</returns>
         [HttpGet]
         public IActionResult Challenge(string scheme, string returnUrl)
         {
-            if (string.IsNullOrEmpty(returnUrl)) returnUrl = "~/";
+            if (string.IsNullOrEmpty(returnUrl))
+            {
+                returnUrl = "~/";
+            }
 
             // validate returnUrl - either it is a valid OIDC URL or back to a local page
             if (Url.IsLocalUrl(returnUrl) == false && interaction.IsValidReturnUrl(returnUrl) == false)
@@ -55,38 +61,38 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
                 // user might have clicked on a malicious link - should be logged
                 throw new Exception("invalid return URL");
             }
-            
-            // start challenge and roundtrip the return URL and scheme 
+
+            // start challenge and roundtrip the return URL and scheme
             var props = new AuthenticationProperties
             {
-                RedirectUri = Url.Action(nameof(Callback)), 
+                RedirectUri = Url.Action(nameof(Callback)),
                 Items =
                 {
-                    { "returnUrl", returnUrl }, 
+                    { "returnUrl", returnUrl },
                     { "scheme", scheme },
                 }
             };
 
             return Challenge(props, scheme);
-            
         }
 
         /// <summary>
-        /// Post processing of external authentication
+        /// Post processing of external authentication.
         /// </summary>
+        /// <returns>Redirect.</returns>
         [HttpGet]
         public async Task<IActionResult> Callback()
         {
             // read external identity from the temporary cookie
             var result = await HttpContext.AuthenticateAsync(IdentityServerConstants.ExternalCookieAuthenticationScheme);
-            if (result?.Succeeded != true)
+            if (result.Succeeded != true)
             {
                 throw new Exception("External authentication error");
             }
 
             if (logger.IsEnabled(LogLevel.Debug))
             {
-                var externalClaims = result.Principal.Claims.Select(c => $"{c.Type}: {c.Value}");
+                var externalClaims = result.Principal?.Claims.Select(c => $"{c.Type}: {c.Value}");
                 logger.LogDebug("External claims: {@claims}", externalClaims);
             }
 
@@ -106,7 +112,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             var additionalLocalClaims = new List<Claim>();
             var localSignInProps = new AuthenticationProperties();
             ProcessLoginCallback(result, additionalLocalClaims, localSignInProps);
-            
+
             // issue authentication cookie for user
             var isuser = new IdentityServerUser(user.SubjectId)
             {
@@ -121,7 +127,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             await HttpContext.SignOutAsync(IdentityServerConstants.ExternalCookieAuthenticationScheme);
 
             // retrieve return URL
-            var returnUrl = result.Properties.Items["returnUrl"] ?? "~/";
+            var returnUrl = result.Properties?.Items["returnUrl"] ?? "~/";
 
             // check if external login is in the context of an OIDC request
             var context = await interaction.GetAuthorizationContextAsync(returnUrl);
@@ -155,7 +161,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             var claims = externalUser.Claims.ToList();
             claims.Remove(userIdClaim);
 
-            var provider = result.Properties.Items["scheme"];
+            var provider = result.Properties?.Items["scheme"];
             var providerUserId = userIdClaim.Value;
 
             // find external user
@@ -176,14 +182,14 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
         {
             // if the external system sent a session id claim, copy it over
             // so we can use it for single sign-out
-            var sid = externalResult.Principal.Claims.FirstOrDefault(x => x.Type == JwtClaimTypes.SessionId);
+            var sid = externalResult.Principal?.Claims.FirstOrDefault(x => x.Type == JwtClaimTypes.SessionId);
             if (sid != null)
             {
                 localClaims.Add(new Claim(JwtClaimTypes.SessionId, sid.Value));
             }
 
-            // if the external provider issued an id_token, we'll keep it for signout
-            var idToken = externalResult.Properties.GetTokenValue("id_token");
+            // if the external provider issued an id_token, we'll keep it for signOut
+            var idToken = externalResult.Properties?.GetTokenValue("id_token");
             if (idToken != null)
             {
                 localSignInProps.StoreTokens(new[] { new AuthenticationToken { Name = "id_token", Value = idToken } });

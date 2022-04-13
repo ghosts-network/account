@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using IdentityServer4.Events;
-using IdentityServer4.Extensions;
-using IdentityServer4.Models;
-using IdentityServer4.Services;
-using IdentityServer4.Validation;
+using Duende.IdentityServer;
+using Duende.IdentityServer.Events;
+using Duende.IdentityServer.Extensions;
+using Duende.IdentityServer.Models;
+using Duende.IdentityServer.Services;
+using Duende.IdentityServer.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -14,7 +15,7 @@ using Microsoft.Extensions.Logging;
 namespace GhostNetwork.Account.Web.Quickstart.Consent
 {
     /// <summary>
-    /// This controller processes the consent UI
+    /// This controller processes the consent UI.
     /// </summary>
     [SecurityHeaders]
     [Authorize]
@@ -35,10 +36,9 @@ namespace GhostNetwork.Account.Web.Quickstart.Consent
         }
 
         /// <summary>
-        /// Shows the consent screen
+        /// Shows the consent screen.
         /// </summary>
-        /// <param name="returnUrl"></param>
-        /// <returns></returns>
+        /// <param name="returnUrl">returnUrl.</param>
         [HttpGet]
         public async Task<IActionResult> Index(string returnUrl)
         {
@@ -52,8 +52,9 @@ namespace GhostNetwork.Account.Web.Quickstart.Consent
         }
 
         /// <summary>
-        /// Handles the consent screen postback
+        /// Handles the consent screen postback.
         /// </summary>
+        /// <param name="model">Consent input model.</param>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(ConsentInputModel model)
@@ -95,20 +96,24 @@ namespace GhostNetwork.Account.Web.Quickstart.Consent
 
             // validate return url is still valid
             var request = await interaction.GetAuthorizationContextAsync(model.ReturnUrl);
-            if (request == null) return result;
+            if (request == null)
+            {
+                return result;
+            }
 
             ConsentResponse grantedConsent = null;
 
             // user clicked 'no' - send back the standard 'access_denied' response
-            if (model?.Button == "no")
+            if (model.Button == "no")
             {
                 grantedConsent = new ConsentResponse { Error = AuthorizationError.AccessDenied };
 
                 // emit event
                 await events.RaiseAsync(new ConsentDeniedEvent(User.GetSubjectId(), request.Client.ClientId, request.ValidatedResources.RawScopeValues));
             }
+
             // user clicked 'yes' - validate the data
-            else if (model?.Button == "yes")
+            else if (model.Button == "yes")
             {
                 // if the user consented to some scope, build the response model
                 if (model.ScopesConsented != null && model.ScopesConsented.Any())
@@ -116,7 +121,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Consent
                     var scopes = model.ScopesConsented;
                     if (ConsentOptions.EnableOfflineAccess == false)
                     {
-                        scopes = scopes.Where(x => x != IdentityServer4.IdentityServerConstants.StandardScopes.OfflineAccess);
+                        scopes = scopes.Where(x => x != IdentityServerConstants.StandardScopes.OfflineAccess);
                     }
 
                     grantedConsent = new ConsentResponse
@@ -173,7 +178,8 @@ namespace GhostNetwork.Account.Web.Quickstart.Consent
         }
 
         private ConsentViewModel CreateConsentViewModel(
-            ConsentInputModel model, string returnUrl,
+            ConsentInputModel model,
+            string returnUrl,
             AuthorizationRequest request)
         {
             var vm = new ConsentViewModel
@@ -193,7 +199,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Consent
             vm.IdentityScopes = request.ValidatedResources.Resources.IdentityResources.Select(x => CreateScopeViewModel(x, vm.ScopesConsented.Contains(x.Name) || model == null)).ToArray();
 
             var apiScopes = new List<ScopeViewModel>();
-            foreach(var parsedScope in request.ValidatedResources.ParsedScopes)
+            foreach (var parsedScope in request.ValidatedResources.ParsedScopes)
             {
                 var apiScope = request.ValidatedResources.Resources.FindApiScope(parsedScope.ParsedName);
                 if (apiScope != null)
@@ -202,32 +208,21 @@ namespace GhostNetwork.Account.Web.Quickstart.Consent
                     apiScopes.Add(scopeVm);
                 }
             }
+
             if (ConsentOptions.EnableOfflineAccess && request.ValidatedResources.Resources.OfflineAccess)
             {
-                apiScopes.Add(GetOfflineAccessScope(vm.ScopesConsented.Contains(IdentityServer4.IdentityServerConstants.StandardScopes.OfflineAccess) || model == null));
+                apiScopes.Add(GetOfflineAccessScope(vm.ScopesConsented.Contains(IdentityServerConstants.StandardScopes.OfflineAccess) || model == null));
             }
+
             vm.ApiScopes = apiScopes;
 
             return vm;
         }
 
-        private ScopeViewModel CreateScopeViewModel(IdentityResource identity, bool check)
-        {
-            return new ScopeViewModel
-            {
-                Value = identity.Name,
-                DisplayName = identity.DisplayName ?? identity.Name,
-                Description = identity.Description,
-                Emphasize = identity.Emphasize,
-                Required = identity.Required,
-                Checked = check || identity.Required
-            };
-        }
-
         public ScopeViewModel CreateScopeViewModel(ParsedScopeValue parsedScopeValue, ApiScope apiScope, bool check)
         {
             var displayName = apiScope.DisplayName ?? apiScope.Name;
-            if (!String.IsNullOrWhiteSpace(parsedScopeValue.ParsedParameter))
+            if (!string.IsNullOrWhiteSpace(parsedScopeValue.ParsedParameter))
             {
                 displayName += ":" + parsedScopeValue.ParsedParameter;
             }
@@ -243,11 +238,24 @@ namespace GhostNetwork.Account.Web.Quickstart.Consent
             };
         }
 
-        private ScopeViewModel GetOfflineAccessScope(bool check)
+        private static ScopeViewModel CreateScopeViewModel(IdentityResource identity, bool check)
         {
             return new ScopeViewModel
             {
-                Value = IdentityServer4.IdentityServerConstants.StandardScopes.OfflineAccess,
+                Value = identity.Name,
+                DisplayName = identity.DisplayName ?? identity.Name,
+                Description = identity.Description,
+                Emphasize = identity.Emphasize,
+                Required = identity.Required,
+                Checked = check || identity.Required
+            };
+        }
+
+        private static ScopeViewModel GetOfflineAccessScope(bool check)
+        {
+            return new ScopeViewModel
+            {
+                Value = IdentityServerConstants.StandardScopes.OfflineAccess,
                 DisplayName = ConsentOptions.OfflineAccessDisplayName,
                 Description = ConsentOptions.OfflineAccessDescription,
                 Emphasize = true,

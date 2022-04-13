@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Duende.IdentityServer;
+using Duende.IdentityServer.Configuration;
+using Duende.IdentityServer.Events;
+using Duende.IdentityServer.Extensions;
+using Duende.IdentityServer.Models;
+using Duende.IdentityServer.Services;
+using Duende.IdentityServer.Validation;
 using GhostNetwork.Account.Web.Quickstart.Consent;
-using IdentityServer4.Configuration;
-using IdentityServer4.Events;
-using IdentityServer4.Extensions;
-using IdentityServer4.Models;
-using IdentityServer4.Services;
-using IdentityServer4.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -41,11 +42,19 @@ namespace GhostNetwork.Account.Web.Quickstart.Device
         public async Task<IActionResult> Index()
         {
             string userCodeParamName = options.Value.UserInteraction.DeviceVerificationUserCodeParameter;
+
             string userCode = Request.Query[userCodeParamName];
-            if (string.IsNullOrWhiteSpace(userCode)) return View("UserCodeCapture");
+
+            if (string.IsNullOrWhiteSpace(userCode))
+            {
+                return View("UserCodeCapture");
+            }
 
             var vm = await BuildViewModelAsync(userCode);
-            if (vm == null) return View("Error");
+            if (vm == null)
+            {
+                return View("Error");
+            }
 
             vm.ConfirmUserCode = true;
             return View("UserCodeConfirmation", vm);
@@ -56,7 +65,11 @@ namespace GhostNetwork.Account.Web.Quickstart.Device
         public async Task<IActionResult> UserCodeCapture(string userCode)
         {
             var vm = await BuildViewModelAsync(userCode);
-            if (vm == null) return View("Error");
+
+            if (vm == null)
+            {
+                return View("Error");
+            }
 
             return View("UserCodeConfirmation", vm);
         }
@@ -65,12 +78,34 @@ namespace GhostNetwork.Account.Web.Quickstart.Device
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Callback(DeviceAuthorizationInputModel model)
         {
-            if (model == null) throw new ArgumentNullException(nameof(model));
+            if (model == null)
+            {
+                throw new ArgumentNullException(nameof(model));
+            }
 
             var result = await ProcessConsent(model);
-            if (result.HasValidationError) return View("Error");
+
+            if (result.HasValidationError)
+            {
+                return View("Error");
+            }
 
             return View("Success");
+        }
+
+        public ScopeViewModel CreateScopeViewModel(ParsedScopeValue parsedScopeValue, ApiScope apiScope, bool check)
+        {
+            return new ScopeViewModel
+            {
+                Value = parsedScopeValue.RawValue,
+
+                // todo: use the parsed scope value in the display?
+                DisplayName = apiScope.DisplayName ?? apiScope.Name,
+                Description = apiScope.Description,
+                Emphasize = apiScope.Emphasize,
+                Required = apiScope.Required,
+                Checked = check || apiScope.Required
+            };
         }
 
         private async Task<ProcessConsentResult> ProcessConsent(DeviceAuthorizationInputModel model)
@@ -78,7 +113,10 @@ namespace GhostNetwork.Account.Web.Quickstart.Device
             var result = new ProcessConsentResult();
 
             var request = await interaction.GetAuthorizationContextAsync(model.UserCode);
-            if (request == null) return result;
+            if (request == null)
+            {
+                return result;
+            }
 
             ConsentResponse grantedConsent = null;
 
@@ -90,6 +128,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Device
                 // emit event
                 await events.RaiseAsync(new ConsentDeniedEvent(User.GetSubjectId(), request.Client.ClientId, request.ValidatedResources.RawScopeValues));
             }
+
             // user clicked 'yes' - validate the data
             else if (model.Button == "yes")
             {
@@ -99,7 +138,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Device
                     var scopes = model.ScopesConsented;
                     if (ConsentOptions.EnableOfflineAccess == false)
                     {
-                        scopes = scopes.Where(x => x != IdentityServer4.IdentityServerConstants.StandardScopes.OfflineAccess);
+                        scopes = scopes.Where(x => x != IdentityServerConstants.StandardScopes.OfflineAccess);
                     }
 
                     grantedConsent = new ConsentResponse
@@ -179,10 +218,12 @@ namespace GhostNetwork.Account.Web.Quickstart.Device
                     apiScopes.Add(scopeVm);
                 }
             }
+
             if (ConsentOptions.EnableOfflineAccess && request.ValidatedResources.Resources.OfflineAccess)
             {
-                apiScopes.Add(GetOfflineAccessScope(vm.ScopesConsented.Contains(IdentityServer4.IdentityServerConstants.StandardScopes.OfflineAccess) || model == null));
+                apiScopes.Add(GetOfflineAccessScope(vm.ScopesConsented.Contains(IdentityServerConstants.StandardScopes.OfflineAccess) || model == null));
             }
+
             vm.ApiScopes = apiScopes;
 
             return vm;
@@ -201,24 +242,11 @@ namespace GhostNetwork.Account.Web.Quickstart.Device
             };
         }
 
-        public ScopeViewModel CreateScopeViewModel(ParsedScopeValue parsedScopeValue, ApiScope apiScope, bool check)
-        {
-            return new ScopeViewModel
-            {
-                Value = parsedScopeValue.RawValue,
-                // todo: use the parsed scope value in the display?
-                DisplayName = apiScope.DisplayName ?? apiScope.Name,
-                Description = apiScope.Description,
-                Emphasize = apiScope.Emphasize,
-                Required = apiScope.Required,
-                Checked = check || apiScope.Required
-            };
-        }
         private ScopeViewModel GetOfflineAccessScope(bool check)
         {
             return new ScopeViewModel
             {
-                Value = IdentityServer4.IdentityServerConstants.StandardScopes.OfflineAccess,
+                Value = IdentityServerConstants.StandardScopes.OfflineAccess,
                 DisplayName = ConsentOptions.OfflineAccessDisplayName,
                 Description = ConsentOptions.OfflineAccessDescription,
                 Emphasize = true,

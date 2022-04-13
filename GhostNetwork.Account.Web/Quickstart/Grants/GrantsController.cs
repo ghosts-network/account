@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using IdentityServer4.Events;
-using IdentityServer4.Extensions;
-using IdentityServer4.Services;
-using IdentityServer4.Stores;
+using Duende.IdentityServer.Events;
+using Duende.IdentityServer.Extensions;
+using Duende.IdentityServer.Services;
+using Duende.IdentityServer.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,7 +22,8 @@ namespace GhostNetwork.Account.Web.Quickstart.Grants
         private readonly IResourceStore resources;
         private readonly IEventService events;
 
-        public GrantsController(IIdentityServerInteractionService interaction,
+        public GrantsController(
+            IIdentityServerInteractionService interaction,
             IClientStore clients,
             IResourceStore resources,
             IEventService events)
@@ -34,7 +35,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Grants
         }
 
         /// <summary>
-        /// Show list of grants
+        /// Show list of grants.
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> Index()
@@ -43,8 +44,9 @@ namespace GhostNetwork.Account.Web.Quickstart.Grants
         }
 
         /// <summary>
-        /// Handle postback to revoke a client
+        /// Handle postback to revoke a client.
         /// </summary>
+        /// <param name="clientId">Client id.</param>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Revoke(string clientId)
@@ -60,7 +62,8 @@ namespace GhostNetwork.Account.Web.Quickstart.Grants
             var grants = await interaction.GetAllUserGrantsAsync();
 
             var list = new List<GrantViewModel>();
-            foreach(var grant in grants)
+
+            foreach (var grant in grants)
             {
                 var client = await clients.FindClientByIdAsync(grant.ClientId);
                 if (client != null)

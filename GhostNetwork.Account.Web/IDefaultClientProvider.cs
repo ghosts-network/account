@@ -1,6 +1,5 @@
 using System.Linq;
 using System.Threading.Tasks;
-using IdentityServer4.Models;
 
 namespace GhostNetwork.Account.Web
 {

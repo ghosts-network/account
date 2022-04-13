@@ -1,8 +1,9 @@
-﻿using GhostNetwork.Account.Web.Services;
+﻿using System;
+using Duende.IdentityServer.Services;
+using GhostNetwork.Account.Web.Services;
 using GhostNetwork.Account.Web.Services.EmailSender;
 using GhostNetwork.AspNetCore.Identity.Mongo;
 using GhostNetwork.Profiles.Api;
-using IdentityServer4.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -17,8 +18,9 @@ namespace GhostNetwork.Account.Web
     public class Startup
     {
         private const string DefaultDbName = "account";
-        
+
         public IWebHostEnvironment Environment { get; }
+
         public IConfiguration Configuration { get; }
 
         public Startup(IWebHostEnvironment environment, IConfiguration configuration)
@@ -33,7 +35,8 @@ namespace GhostNetwork.Account.Web
             {
                 services.AddScoped<IEmailSender, SmtpEmailSender>(_ =>
                 {
-                    var config = new SmtpClientConfiguration(Configuration["SMTP_HOST"],
+                    var config = new SmtpClientConfiguration(
+                        Configuration["SMTP_HOST"],
                         Configuration.GetValue<int>("SMTP_POST"),
                         Configuration.GetValue<bool>("SMTP_SSL_ENABLED"),
                         Configuration["SMTP_USERNAME"],
@@ -47,7 +50,7 @@ namespace GhostNetwork.Account.Web
             {
                 services.AddScoped<IEmailSender, NullEmailSender>();
             }
-            
+
             services.AddScoped<IDefaultClientProvider>(_ => new DefaultClientProvider(Configuration["DEFAULT_CLIENT"]));
 
             services.AddScoped<IProfilesApi>(_ => new ProfilesApi(Configuration["PROFILES_ADDRESS"]));
@@ -72,7 +75,16 @@ namespace GhostNetwork.Account.Web
 
                 // see https://identityserver4.readthedocs.io/en/latest/topics/resources.html
                 options.EmitStaticAudienceClaim = true;
+
+                // key management options
+                options.KeyManagement.Enabled = true;
+
+                // options.KeyManagement.KeyPath = "./";
+                options.KeyManagement.RotationInterval = TimeSpan.FromDays(30);
+                options.KeyManagement.PropagationTime = TimeSpan.FromDays(2);
+                options.KeyManagement.RetentionDuration = TimeSpan.FromDays(7);
             })
+
                 // .AddTestUsers(Config.Users)
                 .AddInMemoryIdentityResources(Config.IdentityResources)
                 .AddInMemoryApiScopes(Config.ApiScopes)
@@ -80,31 +92,31 @@ namespace GhostNetwork.Account.Web
                 .AddInMemoryClients(Config.Clients)
                 .AddAspNetIdentity<IdentityUser>();
 
-            builder.Services.ConfigureExternalCookie(options => {
+            builder.Services.ConfigureExternalCookie(options =>
+            {
                 options.Cookie.IsEssential = true;
                 options.Cookie.SameSite = SameSiteMode.None;
                 options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             });
 
-            builder.Services.ConfigureApplicationCookie(options => {
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
                 options.Cookie.IsEssential = true;
                 options.Cookie.SameSite = SameSiteMode.None;
                 options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             });
-
-            // not recommended for production - you need to store your key material somewhere secure
-            builder.AddDeveloperSigningCredential();
 
             services.AddAuthentication();
         }
 
-        public void Configure(IApplicationBuilder app)
+        public void Configure(IApplicationBuilder app, IServerUrls serverUrls)
         {
             if (!string.IsNullOrEmpty(Configuration["Host"]))
             {
-                app.Use(async (ctx, next) =>
+                // TODO I'm not sure about it
+                app.Use(async (_, next) =>
                 {
-                    ctx.SetIdentityServerOrigin(Configuration["Host"]);
+                    serverUrls.Origin = Configuration["Host"];
                     await next();
                 });
             }

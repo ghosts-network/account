@@ -2,16 +2,16 @@ using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Duende.IdentityServer;
+using Duende.IdentityServer.Events;
+using Duende.IdentityServer.Extensions;
+using Duende.IdentityServer.Models;
+using Duende.IdentityServer.Services;
+using Duende.IdentityServer.Stores;
 using GhostNetwork.Account.Web.Services;
 using GhostNetwork.Profiles.Api;
 using GhostNetwork.Profiles.Model;
 using IdentityModel;
-using IdentityServer4;
-using IdentityServer4.Events;
-using IdentityServer4.Extensions;
-using IdentityServer4.Models;
-using IdentityServer4.Services;
-using IdentityServer4.Stores;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -19,6 +19,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GhostNetwork.Account.Web.Quickstart.Account
 {
+    /// <summary>
+    /// Account controller.
+    /// </summary>
     [SecurityHeaders]
     [AllowAnonymous]
     public class AccountController : Controller
@@ -32,6 +35,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
         private readonly IAuthenticationSchemeProvider schemeProvider;
         private readonly IEventService events;
         private readonly IDefaultClientProvider defaultClientProvider;
+        private readonly IAuthenticationHandlerProvider handlerProvider;
 
         public AccountController(
             IIdentityServerInteractionService interaction,
@@ -41,7 +45,9 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
             IEmailSender emailSender,
-            IProfilesApi profilesApi, IDefaultClientProvider defaultClientProvider)
+            IProfilesApi profilesApi,
+            IDefaultClientProvider defaultClientProvider,
+            IAuthenticationHandlerProvider handlerProvider)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
@@ -52,11 +58,14 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             this.clientStore = clientStore;
             this.schemeProvider = schemeProvider;
             this.events = events;
+            this.handlerProvider = handlerProvider;
         }
 
         /// <summary>
-        /// Entry point into the login workflow
+        /// Entry point into the login workflow.
         /// </summary>
+        /// <param name="returnUrl">return url.</param>
+        /// <returns>vm.</returns>
         [HttpGet]
         public async Task<IActionResult> Login(string returnUrl)
         {
@@ -73,8 +82,12 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
         }
 
         /// <summary>
-        /// Handle postback from username/password login
+        /// Handle postback from username/password login.
         /// </summary>
+        /// <param name="model">login model.</param>
+        /// <param name="button">button.</param>
+        /// <returns>Redirect.</returns>
+        /// <exception cref="Exception">Invalid return url.</exception>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginInputModel model, string button)
@@ -87,7 +100,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             {
                 if (context != null)
                 {
-                    // if the user cancels, send a result back into IdentityServer as if they 
+                    // if the user cancels, send a result back into IdentityServer as if they.
                     // denied the consent (even if this client does not require consent).
                     // this will send back an access denied OIDC error response to the client.
                     await interaction.DenyAuthorizationAsync(context, AuthorizationError.AccessDenied);
@@ -146,12 +159,12 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
                     {
                         return Redirect("~/");
                     }
-                    
+
                     // user might have clicked on a malicious link - should be logged
                     throw new Exception("invalid return URL");
                 }
 
-                await events.RaiseAsync(new UserLoginFailureEvent(model.Username, "invalid credentials", clientId:context?.Client.ClientId));
+                await events.RaiseAsync(new UserLoginFailureEvent(model.Username, "invalid credentials", clientId: context?.Client.ClientId));
                 ModelState.AddModelError(string.Empty, AccountOptions.InvalidCredentialsErrorMessage);
             }
 
@@ -160,6 +173,10 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             return View(vm);
         }
 
+        /// <summary>
+        /// Init registration.
+        /// </summary>
+        /// <returns>Registration vm.</returns>
         [HttpGet]
         public IActionResult Registration()
         {
@@ -167,8 +184,11 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
         }
 
         /// <summary>
-        /// Handle postback from email/password registration
+        /// Handle postback from email/password registration.
         /// </summary>
+        /// <param name="model">registration model.</param>
+        /// <param name="button">button?.</param>
+        /// <returns>PostRegistration.</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Registration(RegistrationInputModel model, string button)
@@ -202,7 +222,8 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
 
                 if (result.Succeeded)
                 {
-                    await profilesApi.CreateAsync(new ProfileCreateViewModel(id,
+                    await profilesApi.CreateAsync(new ProfileCreateViewModel(
+                        id,
                         model.FirstName,
                         model.LastName));
 
@@ -220,8 +241,10 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
         }
 
         /// <summary>
-        /// Show logout page
+        /// Show logout page.
         /// </summary>
+        /// <param name="logoutId">logout id.</param>
+        /// <returns>view.</returns>
         [HttpGet]
         public async Task<IActionResult> Logout(string logoutId)
         {
@@ -238,13 +261,19 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             return View(vm);
         }
 
+        /// <summary>
+        /// Confirm email.
+        /// </summary>
+        /// <param name="userId">user id.</param>
+        /// <param name="code">confirm code.</param>
+        /// <returns>view.</returns>
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> ConfirmEmail(string userId, string code)
         {
             var user = await userManager.FindByIdAsync(userId);
-            // TODO: user not found
 
+            // TODO: user not found
             var result = await userManager.ConfirmEmailAsync(user, code);
             if (result.Succeeded)
             {
@@ -257,8 +286,10 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
         }
 
         /// <summary>
-        /// Handle logout page postback
+        /// Handle logout page postback.
         /// </summary>
+        /// <param name="model">logout model.</param>
+        /// <returns>LoggedOut vm.</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout(LogoutInputModel model)
@@ -266,7 +297,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             // build a model so the logged out page knows what to display
             var vm = await BuildLoggedOutViewModelAsync(model.LogoutId);
 
-            if (User?.Identity.IsAuthenticated == true)
+            if (User.Identity?.IsAuthenticated == true)
             {
                 // delete local authentication cookie
                 await signInManager.SignOutAsync();
@@ -290,6 +321,10 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             return View("LoggedOut", vm);
         }
 
+        /// <summary>
+        /// AccessDenied.
+        /// </summary>
+        /// <returns>Vm.</returns>
         [HttpGet]
         public IActionResult AccessDenied()
         {
@@ -309,9 +344,8 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             var claims = await userManager.GetClaimsAsync(user);
             var name = claims.FirstOrDefault(c => c.Type == JwtClaimTypes.Name)?.Value ?? user.Email;
             await emailSender.SendEmailAsync(new EmailRecipient(name, user.Email), "Confirm your email", body);
-
         }
-        
+
         private async Task<LoginViewModel> BuildLoginViewModelAsync(string returnUrl)
         {
             var context = await interaction.GetAuthorizationContextAsync(returnUrl);
@@ -324,7 +358,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
                 {
                     EnableLocalLogin = local,
                     ReturnUrl = returnUrl,
-                    Username = context?.LoginHint,
+                    Username = context.LoginHint,
                 };
 
                 if (!local)
@@ -382,7 +416,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
         {
             var vm = new LogoutViewModel { LogoutId = logoutId, ShowLogoutPrompt = AccountOptions.ShowLogoutPrompt };
 
-            if (User?.Identity.IsAuthenticated != true)
+            if (User.Identity?.IsAuthenticated != true)
             {
                 // if the user is not authenticated, then just show logged out page
                 vm.ShowLogoutPrompt = false;
@@ -411,24 +445,27 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             {
                 AutomaticRedirectAfterSignOut = AccountOptions.AutomaticRedirectAfterSignOut,
                 PostLogoutRedirectUri = logout?.PostLogoutRedirectUri,
-                ClientName = string.IsNullOrEmpty(logout?.ClientName) ? logout?.ClientId : logout?.ClientName,
+                ClientName = string.IsNullOrEmpty(logout?.ClientName) ? logout?.ClientId : logout.ClientName,
                 SignOutIframeUrl = logout?.SignOutIFrameUrl,
                 LogoutId = logoutId
             };
 
-            if (User?.Identity.IsAuthenticated == true)
+            if (User.Identity?.IsAuthenticated == true)
             {
+                // TODO possible it's broken, not sure. But logOut still work correctly
                 var idp = User.FindFirst(JwtClaimTypes.IdentityProvider)?.Value;
                 if (idp != null && idp != IdentityServerConstants.LocalIdentityProvider)
                 {
-                    var providerSupportsSignout = await HttpContext.GetSchemeSupportsSignOutAsync(idp);
-                    if (providerSupportsSignout)
+                    var handler = await handlerProvider.GetHandlerAsync(HttpContext, idp);
+
+                    // var providerSupportsSignOut = await HttpContext.GetSchemeSupportsSignOutAsync(idp);
+                    if (handler is not null)
                     {
                         if (vm.LogoutId == null)
                         {
                             // if there's no current logout context, we need to create one
                             // this captures necessary info from the current logged in user
-                            // before we signout and redirect away to the external IdP for signout
+                            // before we signOut and redirect away to the external IdP for signOut
                             vm.LogoutId = await interaction.CreateLogoutContextAsync();
                         }
 
