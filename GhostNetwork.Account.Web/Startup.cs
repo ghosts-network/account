@@ -32,6 +32,7 @@ namespace GhostNetwork.Account.Web
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors();
             if (Configuration["EMAIL_SENDER"] == "SMTP")
             {
                 services.AddScoped<IEmailSender, SmtpEmailSender>(_ =>
@@ -67,15 +68,6 @@ namespace GhostNetwork.Account.Web
                 .AddMongoDbStores<IdentityDbContext<string>>(new MongoOptions(MongoClientSettings.FromUrl(mongoUrl), mongoUrl.DatabaseName ?? DefaultDbName))
                 .AddDefaultTokenProviders();
 
-            services.AddSingleton<ICorsPolicyService>((container) =>
-            {
-                var logger = container.GetRequiredService<ILogger<DefaultCorsPolicyService>>();
-
-                return new DefaultCorsPolicyService(logger)
-                {
-                    AllowedOrigins = { "https://ghost-network.boberneprotiv.com" }
-                };
-            });
             var builder = services.AddIdentityServer(options =>
             {
                 options.Events.RaiseErrorEvents = true;
@@ -123,7 +115,6 @@ namespace GhostNetwork.Account.Web
         {
             if (!string.IsNullOrEmpty(Configuration["Host"]))
             {
-                // TODO I'm not sure about it
                 app.Use(async (_, next) =>
                 {
                     serverUrls.Origin = Configuration["Host"];
@@ -138,6 +129,10 @@ namespace GhostNetwork.Account.Web
 
             app.UseStaticFiles();
 
+            app.UseCors(builder => builder
+                .WithOrigins("http://localhost:4200", "https://ghost-network.boberneprotiv.com")
+                .AllowAnyHeader()
+                .AllowAnyMethod());
             app.UseRouting();
             app.UseIdentityServer();
             app.UseAuthorization();
