@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
 namespace GhostNetwork.Account.Web
@@ -66,6 +67,15 @@ namespace GhostNetwork.Account.Web
                 .AddMongoDbStores<IdentityDbContext<string>>(new MongoOptions(MongoClientSettings.FromUrl(mongoUrl), mongoUrl.DatabaseName ?? DefaultDbName))
                 .AddDefaultTokenProviders();
 
+            services.AddSingleton<ICorsPolicyService>((container) =>
+            {
+                var logger = container.GetRequiredService<ILogger<DefaultCorsPolicyService>>();
+
+                return new DefaultCorsPolicyService(logger)
+                {
+                    AllowedOrigins = { "https://ghost-network.boberneprotiv.com" }
+                };
+            });
             var builder = services.AddIdentityServer(options =>
             {
                 options.Events.RaiseErrorEvents = true;
