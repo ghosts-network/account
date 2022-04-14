@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Duende.IdentityServer.Services;
 using GhostNetwork.Account.Web.Services;
 using GhostNetwork.Account.Web.Services.EmailSender;
@@ -11,7 +12,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
 namespace GhostNetwork.Account.Web
@@ -20,9 +20,9 @@ namespace GhostNetwork.Account.Web
     {
         private const string DefaultDbName = "account";
 
-        public IWebHostEnvironment Environment { get; }
+        private IWebHostEnvironment Environment { get; }
 
-        public IConfiguration Configuration { get; }
+        private IConfiguration Configuration { get; }
 
         public Startup(IWebHostEnvironment environment, IConfiguration configuration)
         {
@@ -129,10 +129,18 @@ namespace GhostNetwork.Account.Web
 
             app.UseStaticFiles();
 
-            app.UseCors(builder => builder
-                .WithOrigins("http://localhost:4200", "https://ghost-network.boberneprotiv.com")
-                .AllowAnyHeader()
-                .AllowAnyMethod());
+            app.UseCors(builder =>
+            {
+                var allowOrigins = GetAllowOrigins();
+                builder = allowOrigins.Any()
+                    ? builder.WithOrigins(allowOrigins)
+                    : builder.AllowAnyOrigin();
+
+                builder
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+
             app.UseRouting();
             app.UseIdentityServer();
             app.UseAuthorization();
@@ -140,6 +148,11 @@ namespace GhostNetwork.Account.Web
             {
                 endpoints.MapDefaultControllerRoute();
             });
+        }
+
+        private string[] GetAllowOrigins()
+        {
+            return Configuration.GetValue<string>("ALLOWED_HOSTS")?.Split(',').ToArray() ?? Array.Empty<string>();
         }
     }
 }
