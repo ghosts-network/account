@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using Duende.IdentityServer.Services;
 using GhostNetwork.Account.Web.Services;
 using GhostNetwork.Account.Web.Services.EmailSender;
@@ -80,19 +81,22 @@ namespace GhostNetwork.Account.Web
 
                 // key management options
                 options.KeyManagement.Enabled = true;
-
-                // options.KeyManagement.KeyPath = "./";
-                options.KeyManagement.RotationInterval = TimeSpan.FromDays(30);
-                options.KeyManagement.PropagationTime = TimeSpan.FromDays(2);
-                options.KeyManagement.RetentionDuration = TimeSpan.FromDays(7);
             })
-
-                // .AddTestUsers(Config.Users)
                 .AddInMemoryIdentityResources(Config.IdentityResources)
                 .AddInMemoryApiScopes(Config.ApiScopes)
                 .AddInMemoryApiResources(Config.ApiResources)
                 .AddInMemoryClients(Config.Clients)
                 .AddAspNetIdentity<IdentityUser>();
+
+            if (Configuration["SINGING_TYPE"] == "X509")
+            {
+                var path = Configuration["X509_PATH"];
+                var password = Configuration["X509_PASSWORD"];
+                var algorithm = Configuration["X509_ALGORITHM"] ?? "RS256";
+                var certificate = new X509Certificate2(path, password);
+
+                builder.AddSigningCredential(certificate, algorithm);
+            }
 
             builder.Services.ConfigureExternalCookie(options =>
             {
