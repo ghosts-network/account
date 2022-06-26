@@ -1,0 +1,15 @@
+{
+  "clients": [
+    {
+      "ClientId": "angular_spa",
+      "ClientName": "Angular Client",
+      "AllowedGrantTypes": ["implicit"],
+      "AllowedScopes": ["openid", "profile", "api"],
+      "RedirectUris": ["http://localhost:4200/auth-callback"],
+      "PostLogoutRedirectUris": ["http://localhost:4200/"],
+      "ClientUri": "http://localhost:4200",
+      "AllowedCorsOrigins": ["http://localhost:4200"],
+      "AllowAccessTokensViaBrowser": true
+    }
+  ]
+}

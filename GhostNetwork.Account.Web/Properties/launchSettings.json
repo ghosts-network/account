@@ -8,6 +8,8 @@
         "MONGO_ADDRESS": "mongodb://127.0.0.1:27017/account",
         "PROFILES_ADDRESS": "http://localhost:5400",
         "EMAIL_SENDER": "NULL",
+        "OAUTH_CLIENTS_SOURCE": "",
+        "SINGING_TYPE": "Developer",
         "DEFAULT_CLIENT": "angular_spa",
         "ALLOWED_HOSTS": "http://localhost:4200,https://ghost-network.boberneprotiv.com"
       },

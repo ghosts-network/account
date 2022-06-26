@@ -85,9 +85,18 @@ namespace GhostNetwork.Account.Web
             })
                 .AddInMemoryIdentityResources(Config.IdentityResources)
                 .AddInMemoryApiScopes(Config.ApiScopes)
-                .AddInMemoryApiResources(Config.ApiResources)
-                .AddInMemoryClients(Config.Clients)
-                .AddAspNetIdentity<IdentityUser>();
+                .AddInMemoryApiResources(Config.ApiResources);
+
+            if (Configuration["OAUTH_CLIENTS_SOURCE"] == "file")
+            {
+                builder.AddInMemoryClients(GetClients());
+            }
+            else
+            {
+                builder.AddInMemoryClients(Config.Clients);
+            }
+
+            builder.AddAspNetIdentity<IdentityUser>();
 
             if (Configuration["SINGING_TYPE"] == "X509")
             {
@@ -166,6 +175,14 @@ namespace GhostNetwork.Account.Web
         private string[] GetAllowOrigins()
         {
             return Configuration.GetValue<string>("ALLOWED_HOSTS")?.Split(',').ToArray() ?? Array.Empty<string>();
+        }
+
+        private IConfigurationSection GetClients()
+        {
+            return new ConfigurationBuilder()
+                .AddJsonFile(Configuration.GetValue("OAUTH_CLIENTS_FILE", "./clients.json"))
+                .Build()
+                .GetRequiredSection("clients");
         }
     }
 }
