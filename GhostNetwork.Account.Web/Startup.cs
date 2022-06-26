@@ -97,6 +97,14 @@ namespace GhostNetwork.Account.Web
 
                 builder.AddSigningCredential(certificate, algorithm);
             }
+            else if (Configuration["SINGING_TYPE"] == "Developer")
+            {
+                builder.AddDeveloperSigningCredential();
+            }
+            else
+            {
+                throw new InvalidOperationException("Invalid signing credential type");
+            }
 
             builder.Services.ConfigureExternalCookie(options =>
             {
