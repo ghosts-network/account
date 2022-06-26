@@ -117,7 +117,7 @@ namespace GhostNetwork.Account.Web
             {
                 options.Cookie.IsEssential = true;
                 options.Cookie.SameSite = SameSiteMode.None;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
             });
 
             services.AddAuthentication();
