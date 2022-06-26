@@ -71,6 +71,7 @@ namespace GhostNetwork.Account.Web
 
             var builder = services.AddIdentityServer(options =>
             {
+                options.IssuerUri = Configuration["ISSUER_URI"];
                 options.Events.RaiseErrorEvents = true;
                 options.Events.RaiseInformationEvents = true;
                 options.Events.RaiseFailureEvents = true;
