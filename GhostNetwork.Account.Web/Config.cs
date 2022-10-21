@@ -101,7 +101,7 @@ namespace GhostNetwork.Account.Web
                 AllowedScopes = new List<string> {"openid", "profile", "api"},
                 RedirectUris = new List<string>
                 {
-                    "https://ghost-network.boberneprotiv.com/auth-callback"
+                    "https://ghost-network.boberneprotiv.com/signin-callback"
                 },
                 PostLogoutRedirectUris = new List<string>
                 {
@@ -117,21 +117,17 @@ namespace GhostNetwork.Account.Web
             {
                 ClientId = "cockpit_local",
                 ClientName = "Cockpit Client",
-                AllowedGrantTypes = GrantTypes.Implicit,
+                ClientSecrets = { new Secret("secret".Sha256()) },
+                AllowedGrantTypes = GrantTypes.Code,
                 AllowedScopes = new List<string> { "openid", "profile", "api" },
                 RedirectUris = new List<string>
                 {
-                    "http://localhost:5236/signin-callback"
+                    "https://localhost:5236/signin-callback"
                 },
                 PostLogoutRedirectUris = new List<string>
                 {
-                    "http://localhost:5236/"
-                },
-                AllowedCorsOrigins = new List<string>
-                {
-                    "http://localhost:5236"
-                },
-                AllowAccessTokensViaBrowser = true
+                    "https://localhost:5236/"
+                }
             }
         };
 
