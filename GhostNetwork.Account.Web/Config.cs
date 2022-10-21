@@ -112,6 +112,26 @@ namespace GhostNetwork.Account.Web
                     "https://ghost-network.boberneprotiv.com"
                 },
                 AllowAccessTokensViaBrowser = true
+            },
+            new Client
+            {
+                ClientId = "cockpit_local",
+                ClientName = "Cockpit Client",
+                AllowedGrantTypes = GrantTypes.Implicit,
+                AllowedScopes = new List<string> { "openid", "profile", "api" },
+                RedirectUris = new List<string>
+                {
+                    "http://localhost:5236/signin-callback"
+                },
+                PostLogoutRedirectUris = new List<string>
+                {
+                    "http://localhost:5236/"
+                },
+                AllowedCorsOrigins = new List<string>
+                {
+                    "http://localhost:5236"
+                },
+                AllowAccessTokensViaBrowser = true
             }
         };
 
