@@ -122,11 +122,11 @@ namespace GhostNetwork.Account.Web
                 AllowedScopes = new List<string> { "openid", "profile", "api" },
                 RedirectUris = new List<string>
                 {
-                    "https://localhost:5236/signin-oidc"
+                    "http://localhost:5236/signin-oidc"
                 },
                 PostLogoutRedirectUris = new List<string>
                 {
-                    "https://localhost:5236/signout-callback-oidc"
+                    "http://localhost:5236/signout-callback-oidc"
                 }
             }
         };
