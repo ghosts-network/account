@@ -101,7 +101,7 @@ namespace GhostNetwork.Account.Web
                 AllowedScopes = new List<string> {"openid", "profile", "api"},
                 RedirectUris = new List<string>
                 {
-                    "https://ghost-network.boberneprotiv.com/signin-callback"
+                    "https://ghost-network.boberneprotiv.com/auth-callback"
                 },
                 PostLogoutRedirectUris = new List<string>
                 {
