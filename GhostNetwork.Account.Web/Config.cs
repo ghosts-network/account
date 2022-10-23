@@ -128,6 +128,22 @@ namespace GhostNetwork.Account.Web
                 {
                     "http://localhost:5236/signout-callback-oidc"
                 }
+            },
+            new Client
+            {
+                ClientId = "cockpit_prod",
+                ClientName = "Cockpit Client",
+                ClientSecrets = { new Secret("BFB5DF82-9F66-4D18-9D3D-C84428B141D7".Sha256()) },
+                AllowedGrantTypes = GrantTypes.Code,
+                AllowedScopes = new List<string> { "openid", "profile", "api" },
+                RedirectUris = new List<string>
+                {
+                    "https://cockpit.ghost-network.boberneprotiv.com/signin-oidc"
+                },
+                PostLogoutRedirectUris = new List<string>
+                {
+                    "https://cockpit.ghost-network.boberneprotiv.com/signout-callback-oidc"
+                }
             }
         };
 
