@@ -8,10 +8,15 @@ namespace GhostNetwork.Account.Web
 {
     public static class Config
     {
-        public static IEnumerable<IdentityResource> IdentityResources => new IdentityResource[]
+        public static IEnumerable<IdentityResource> IdentityResources => new[]
         {
             new IdentityResources.OpenId(),
-            new IdentityResources.Profile()
+            new IdentityResources.Profile(),
+            new IdentityResource
+            {
+                Name = "roles",
+                UserClaims = { ClaimTypes.Role }
+            }
         };
 
         public static IEnumerable<ApiScope> ApiScopes => new[]
@@ -23,7 +28,7 @@ namespace GhostNetwork.Account.Web
         {
             new ApiResource("api", "Main API")
             {
-                Scopes = {"api"}
+                Scopes = { "api" }
             }
         };
 
@@ -34,7 +39,7 @@ namespace GhostNetwork.Account.Web
                 ClientId = "ios_app",
                 ClientName = "IOS Client",
                 AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
-                AllowedScopes = new List<string> {"openid", "profile", "api"},
+                AllowedScopes = new List<string> { "openid", "profile", "api" },
                 ClientSecrets = new List<Secret>
                 {
                     new Secret("temp_secret".Sha256())
@@ -45,7 +50,7 @@ namespace GhostNetwork.Account.Web
                 ClientId = "autotests_client",
                 ClientName = "Autotests Client",
                 AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
-                AllowedScopes = new List<string> {"openid", "profile", "api"},
+                AllowedScopes = new List<string> { "openid", "profile", "api" },
                 ClientSecrets = new List<Secret>
                 {
                     new Secret("test_temp_secret".Sha256())
@@ -71,9 +76,9 @@ namespace GhostNetwork.Account.Web
 
                 AllowedGrantTypes = GrantTypes.Code,
 
-                RedirectUris = new List<string> {"http://localhost:5000/swagger/oauth2-redirect.html"},
-                AllowedCorsOrigins = new List<string> {"http://localhost:5000"},
-                AllowedScopes = new List<string> {"openid", "profile", "api"}
+                RedirectUris = new List<string> { "http://localhost:5000/swagger/oauth2-redirect.html" },
+                AllowedCorsOrigins = new List<string> { "http://localhost:5000" },
+                AllowedScopes = new List<string> { "openid", "profile", "api" }
             },
             new Client
             {
@@ -91,14 +96,14 @@ namespace GhostNetwork.Account.Web
                 {
                     "https://api.ghost-network.boberneprotiv.com"
                 },
-                AllowedScopes = new List<string> {"openid", "profile", "api"}
+                AllowedScopes = new List<string> { "openid", "profile", "api" }
             },
             new Client
             {
                 ClientId = "angular_spa_prod",
                 ClientName = "Angular Client",
                 AllowedGrantTypes = GrantTypes.Implicit,
-                AllowedScopes = new List<string> {"openid", "profile", "api"},
+                AllowedScopes = new List<string> { "openid", "profile", "api" },
                 RedirectUris = new List<string>
                 {
                     "https://ghost-network.boberneprotiv.com/auth-callback"
@@ -119,7 +124,7 @@ namespace GhostNetwork.Account.Web
                 ClientName = "Cockpit Client",
                 ClientSecrets = { new Secret("secret".Sha256()) },
                 AllowedGrantTypes = GrantTypes.Code,
-                AllowedScopes = new List<string> { "openid", "profile", "api" },
+                AllowedScopes = new List<string> { "openid", "profile", "api", "roles" },
                 RedirectUris = new List<string>
                 {
                     "http://localhost:5236/signin-oidc"
@@ -135,7 +140,7 @@ namespace GhostNetwork.Account.Web
                 ClientName = "Cockpit Client",
                 ClientSecrets = { new Secret("BFB5DF82-9F66-4D18-9D3D-C84428B141D7".Sha256()) },
                 AllowedGrantTypes = GrantTypes.Code,
-                AllowedScopes = new List<string> { "openid", "profile", "api" },
+                AllowedScopes = new List<string> { "openid", "profile", "api", "roles" },
                 RedirectUris = new List<string>
                 {
                     "https://cockpit.ghost-network.boberneprotiv.com/signin-oidc"
