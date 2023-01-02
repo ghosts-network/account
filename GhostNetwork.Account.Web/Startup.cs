@@ -144,11 +144,7 @@ namespace GhostNetwork.Account.Web
                 });
             }
 
-            if (Environment.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-
+            app.UseDeveloperExceptionPage();
             app.UseStaticFiles();
 
             app.UseCors(builder =>
