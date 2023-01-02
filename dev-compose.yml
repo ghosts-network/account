@@ -8,11 +8,11 @@ services:
     depends_on:
       - db
     environment:
-      - MONGO_ADDRESS=db:27017
+      - MONGO_CONNECTION=mongodb://db:27017/profile
       - ASPNETCORE_ENVIRONMENT=Development
 
   db:
-    image: mvertes/alpine-mongo
+    image: mongo:5.0.8
     ports:
       - "27017:27017"
 

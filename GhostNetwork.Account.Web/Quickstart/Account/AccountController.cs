@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace GhostNetwork.Account.Web.Quickstart.Account
 {
@@ -36,6 +37,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
         private readonly IEventService events;
         private readonly IDefaultClientProvider defaultClientProvider;
         private readonly IAuthenticationHandlerProvider handlerProvider;
+        private readonly ILogger<AccountController> logger;
 
         public AccountController(
             IIdentityServerInteractionService interaction,
@@ -47,7 +49,8 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             IEmailSender emailSender,
             IProfilesApi profilesApi,
             IDefaultClientProvider defaultClientProvider,
-            IAuthenticationHandlerProvider handlerProvider)
+            IAuthenticationHandlerProvider handlerProvider,
+            ILogger<AccountController> logger)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
@@ -59,6 +62,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             this.schemeProvider = schemeProvider;
             this.events = events;
             this.handlerProvider = handlerProvider;
+            this.logger = logger;
         }
 
         /// <summary>
@@ -227,14 +231,22 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
                         model.FirstName,
                         model.LastName));
 
-                    await SendConfirmationEmailAsync(user);
-                    return View("PostRegistration");
+                    try
+                    {
+                        await SendConfirmationEmailAsync(user);
+                        return View("PostRegistration");
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, "Failed to send confirmation email");
+                        throw;
+                    }
                 }
             }
 
             foreach (var error in result.Errors)
             {
-                ModelState.AddModelError("", error.Description);
+                ModelState.AddModelError(string.Empty, error.Description);
             }
 
             return View(model);
