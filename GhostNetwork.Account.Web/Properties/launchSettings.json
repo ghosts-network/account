@@ -5,7 +5,7 @@
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "MONGO_ADDRESS": "mongodb://tmp-root:M4WY3d6Jy7UipiX7LB@boberneprotiv.com:27017/ghost-network?authSource=admin&readPreference=primary",
+        "MONGO_ADDRESS": "mongodb://127.0.0.1:27017/account",
         "PROFILES_ADDRESS": "http://localhost:5400",
         "EMAIL_SENDER": "NULL",
         "OAUTH_CLIENTS_SOURCE": "",
