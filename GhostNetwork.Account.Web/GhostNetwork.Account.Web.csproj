@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\GhostNetwork.Account.Mongo\GhostNetwork.Account.Mongo.csproj" />
     <ProjectReference Include="..\GhostNetwork.AspNetCore.Identity.Mongo\GhostNetwork.AspNetCore.Identity.Mongo.csproj" />
   </ItemGroup>
 

@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Services;
+using GhostNetwork.Account.Mongo;
 using GhostNetwork.Account.Web.Services;
 using GhostNetwork.Account.Web.Services.EmailSender;
+using GhostNetwork.Account.Web.Services.OAuth.Clients;
 using GhostNetwork.AspNetCore.Identity.Mongo;
 using GhostNetwork.Profiles.Api;
 using Microsoft.AspNetCore.Builder;
@@ -12,8 +16,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
+using MongoDB.Driver.Core.Events;
 
 namespace GhostNetwork.Account.Web
 {
@@ -58,16 +63,66 @@ namespace GhostNetwork.Account.Web
 
             services.AddScoped<IProfilesApi>(_ => new ProfilesApi(Configuration["PROFILES_ADDRESS"]));
 
+            services.AddRazorPages();
             services.AddControllersWithViews();
 
             var mongoUrl = MongoUrl.Create(Configuration["MONGO_ADDRESS"]);
+            services.AddSingleton(provider =>
+            {
+                var settings = MongoClientSettings.FromUrl(mongoUrl);
+                settings.ClusterConfigurator = cb =>
+                {
+                    cb.Subscribe<CommandStartedEvent>(_ =>
+                    {
+                        var logger = provider.GetRequiredService<ILogger<MongoDbContext>>();
+                        using var scope = logger.BeginScope(new Dictionary<string, object>
+                        {
+                            ["type"] = "outgoing:mongodb"
+                        });
+
+                        logger.LogInformation("Mongodb query started");
+                    });
+
+                    cb.Subscribe<CommandSucceededEvent>(e =>
+                    {
+                        var logger = provider.GetRequiredService<ILogger<MongoDbContext>>();
+                        using var scope = logger.BeginScope(new Dictionary<string, object>
+                        {
+                            ["type"] = "outgoing:mongodb",
+                            ["elapsedMilliseconds"] = e.Duration.Milliseconds
+                        });
+
+                        logger.LogInformation("Mongodb query finished");
+                    });
+
+                    cb.Subscribe<CommandFailedEvent>(e =>
+                    {
+                        var logger = provider.GetRequiredService<ILogger<MongoDbContext>>();
+                        using var scope = logger.BeginScope(new Dictionary<string, object>
+                        {
+                            ["type"] = "outgoing:mongodb",
+                            ["elapsedMilliseconds"] = e.Duration.Milliseconds
+                        });
+
+                        logger.LogInformation("Mongodb query failed");
+                    });
+                };
+                return new MongoClient(settings);
+            });
+
+            services.AddScoped(provider => provider.GetRequiredService<MongoClient>()
+                .GetDatabase(mongoUrl.DatabaseName ?? DefaultDbName));
+            services.AddScoped<MongoDbContext>();
+
             services.AddIdentity<IdentityUser, IdentityRole>(options =>
                 {
                     options.User.RequireUniqueEmail = true;
                     options.SignIn.RequireConfirmedEmail = true;
                 })
-                .AddMongoDbStores<IdentityDbContext<string>>(new MongoOptions(MongoClientSettings.FromUrl(mongoUrl), mongoUrl.DatabaseName ?? DefaultDbName))
+                .AddMongoDbStores<IdentityDbContext<string>>()
                 .AddDefaultTokenProviders();
+
+            services.AddScoped<ClientsStorage>();
 
             var builder = services.AddIdentityServer(options =>
             {
@@ -89,11 +144,17 @@ namespace GhostNetwork.Account.Web
 
             if (Configuration["OAUTH_CLIENTS_SOURCE"] == "file")
             {
-                builder.AddInMemoryClients(GetClients());
+                services.AddScoped(provider => new ComposedClientStorage(
+                    new InMemoryClientStorage(GetClients()),
+                    new MongoClientStorage(provider.GetRequiredService<ClientsStorage>())));
+                builder.AddClientStore<ComposedClientStorage>();
             }
             else
             {
-                builder.AddInMemoryClients(Config.Clients);
+                services.AddScoped(provider => new ComposedClientStorage(
+                    new InMemoryClientStorage(Config.Clients),
+                    new MongoClientStorage(provider.GetRequiredService<ClientsStorage>())));
+                builder.AddClientStore<ComposedClientStorage>();
             }
 
             builder.AddAspNetIdentity<IdentityUser>();
@@ -165,6 +226,7 @@ namespace GhostNetwork.Account.Web
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapDefaultControllerRoute();
+                endpoints.MapRazorPages();
             });
         }
 
@@ -173,12 +235,17 @@ namespace GhostNetwork.Account.Web
             return Configuration.GetValue<string>("ALLOWED_HOSTS")?.Split(',').ToArray() ?? Array.Empty<string>();
         }
 
-        private IConfigurationSection GetClients()
+        private IEnumerable<Client> GetClients()
         {
-            return new ConfigurationBuilder()
+            var section = new ConfigurationBuilder()
                 .AddJsonFile(Configuration.GetValue("OAUTH_CLIENTS_FILE", "./clients.json"))
                 .Build()
                 .GetRequiredSection("clients");
+
+            var clients = new List<Client>();
+            section.Bind(clients);
+
+            return clients;
         }
     }
 }
