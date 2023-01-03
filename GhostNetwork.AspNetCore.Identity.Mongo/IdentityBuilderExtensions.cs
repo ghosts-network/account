@@ -1,17 +1,13 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
-using MongoDB.Driver;
 
 namespace GhostNetwork.AspNetCore.Identity.Mongo
 {
     public static class IdentityBuilderExtensions
     {
-        public static IdentityBuilder AddMongoDbStores<TContext>(this IdentityBuilder identityBuilder, MongoOptions options)
+        public static IdentityBuilder AddMongoDbStores<TContext>(this IdentityBuilder identityBuilder)
             where TContext : IdentityDbContext<string>
         {
-            identityBuilder.Services
-                .AddScoped(_ => new MongoClient(options.ClientSettings).GetDatabase(options.DbName));
-
             identityBuilder.Services
                 .AddScoped(typeof(IdentityDbContext<string>), typeof(TContext));
 

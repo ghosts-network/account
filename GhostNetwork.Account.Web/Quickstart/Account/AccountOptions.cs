@@ -1,16 +1,12 @@
-﻿using System;
+﻿namespace GhostNetwork.Account.Web.Quickstart.Account;
 
-namespace GhostNetwork.Account.Web.Quickstart.Account
+public class AccountOptions
 {
-    public class AccountOptions
-    {
-        public static bool AllowLocalLogin = true;
-        public static bool AllowRememberLogin = true;
-        public static TimeSpan RememberMeLoginDuration = TimeSpan.FromDays(30);
+    public const bool AllowLocalLogin = true;
+    public const bool AllowRememberLogin = true;
 
-        public static bool ShowLogoutPrompt = true;
-        public static bool AutomaticRedirectAfterSignOut = false;
+    public const bool ShowLogoutPrompt = true;
+    public const bool AutomaticRedirectAfterSignOut = false;
 
-        public static string InvalidCredentialsErrorMessage = "Invalid username or password";
-    }
+    public const string InvalidCredentialsErrorMessage = "Invalid username or password";
 }

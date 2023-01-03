@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Duende.IdentityServer;
 using Duende.IdentityServer.Events;
 using Duende.IdentityServer.Extensions;
 using Duende.IdentityServer.Models;
@@ -119,10 +117,6 @@ namespace GhostNetwork.Account.Web.Quickstart.Consent
                 if (model.ScopesConsented != null && model.ScopesConsented.Any())
                 {
                     var scopes = model.ScopesConsented;
-                    if (ConsentOptions.EnableOfflineAccess == false)
-                    {
-                        scopes = scopes.Where(x => x != IdentityServerConstants.StandardScopes.OfflineAccess);
-                    }
 
                     grantedConsent = new ConsentResponse
                     {
@@ -169,10 +163,8 @@ namespace GhostNetwork.Account.Web.Quickstart.Consent
             {
                 return CreateConsentViewModel(model, returnUrl, request);
             }
-            else
-            {
-                logger.LogError("No consent request matching request: {0}", returnUrl);
-            }
+
+            logger.LogError("No consent request matching request: {ReturnUrl}", returnUrl);
 
             return null;
         }
@@ -209,17 +201,12 @@ namespace GhostNetwork.Account.Web.Quickstart.Consent
                 }
             }
 
-            if (ConsentOptions.EnableOfflineAccess && request.ValidatedResources.Resources.OfflineAccess)
-            {
-                apiScopes.Add(GetOfflineAccessScope(vm.ScopesConsented.Contains(IdentityServerConstants.StandardScopes.OfflineAccess) || model == null));
-            }
-
             vm.ApiScopes = apiScopes;
 
             return vm;
         }
 
-        public ScopeViewModel CreateScopeViewModel(ParsedScopeValue parsedScopeValue, ApiScope apiScope, bool check)
+        private ScopeViewModel CreateScopeViewModel(ParsedScopeValue parsedScopeValue, ApiScope apiScope, bool check)
         {
             var displayName = apiScope.DisplayName ?? apiScope.Name;
             if (!string.IsNullOrWhiteSpace(parsedScopeValue.ParsedParameter))
@@ -238,7 +225,7 @@ namespace GhostNetwork.Account.Web.Quickstart.Consent
             };
         }
 
-        private static ScopeViewModel CreateScopeViewModel(IdentityResource identity, bool check)
+        private ScopeViewModel CreateScopeViewModel(IdentityResource identity, bool check)
         {
             return new ScopeViewModel
             {
@@ -248,18 +235,6 @@ namespace GhostNetwork.Account.Web.Quickstart.Consent
                 Emphasize = identity.Emphasize,
                 Required = identity.Required,
                 Checked = check || identity.Required
-            };
-        }
-
-        private static ScopeViewModel GetOfflineAccessScope(bool check)
-        {
-            return new ScopeViewModel
-            {
-                Value = IdentityServerConstants.StandardScopes.OfflineAccess,
-                DisplayName = ConsentOptions.OfflineAccessDisplayName,
-                Description = ConsentOptions.OfflineAccessDescription,
-                Emphasize = true,
-                Checked = check
             };
         }
     }

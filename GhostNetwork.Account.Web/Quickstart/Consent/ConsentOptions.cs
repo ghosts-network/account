@@ -1,12 +1,10 @@
-﻿namespace GhostNetwork.Account.Web.Quickstart.Consent
-{
-    public class ConsentOptions
-    {
-        public static bool EnableOfflineAccess = true;
-        public static string OfflineAccessDisplayName = "Offline Access";
-        public static string OfflineAccessDescription = "Access to your applications and resources, even when you are offline";
+﻿namespace GhostNetwork.Account.Web.Quickstart.Consent;
 
-        public static readonly string MustChooseOneErrorMessage = "You must pick at least one permission";
-        public static readonly string InvalidSelectionErrorMessage = "Invalid selection";
-    }
+public class ConsentOptions
+{
+    public const string OfflineAccessDisplayName = "Offline Access";
+    public const string OfflineAccessDescription = "Access to your applications and resources, even when you are offline";
+
+    public const string MustChooseOneErrorMessage = "You must pick at least one permission";
+    public const string InvalidSelectionErrorMessage = "Invalid selection";
 }

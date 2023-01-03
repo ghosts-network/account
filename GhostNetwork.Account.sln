@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GhostNetwork.Account.Web", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GhostNetwork.AspNetCore.Identity.Mongo", "GhostNetwork.AspNetCore.Identity.Mongo\GhostNetwork.AspNetCore.Identity.Mongo.csproj", "{0E27C453-2866-48AB-A300-764996DC9D4F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GhostNetwork.Account.Mongo", "GhostNetwork.Account.Mongo\GhostNetwork.Account.Mongo.csproj", "{20A9ED8E-765A-4EB9-B092-0FAB578238B3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{0E27C453-2866-48AB-A300-764996DC9D4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0E27C453-2866-48AB-A300-764996DC9D4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0E27C453-2866-48AB-A300-764996DC9D4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20A9ED8E-765A-4EB9-B092-0FAB578238B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20A9ED8E-765A-4EB9-B092-0FAB578238B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20A9ED8E-765A-4EB9-B092-0FAB578238B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20A9ED8E-765A-4EB9-B092-0FAB578238B3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
