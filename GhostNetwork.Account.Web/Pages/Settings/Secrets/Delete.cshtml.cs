@@ -26,12 +26,12 @@ public class Delete : PageModel
         var client = await clientsStorage.FindOneAsync(clientId);
         if (client is null)
         {
-            throw new Exception();
+            return NotFound();
         }
 
         if (client.Owner != User.GetSubjectId())
         {
-            throw new Exception();
+            return Forbid();
         }
 
         Secret = new SecretModel(client.Id, client.Name, DateTimeOffset.FromUnixTimeMilliseconds(client.Secrets.First().Expiration).DateTime);
