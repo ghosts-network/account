@@ -15,16 +15,16 @@ public class Create : PageModel
 {
     private readonly ClientsStorage clientsStorage;
 
-    [BindProperty]
-    public CreateSecretModel Secret { get; set; }
-
-    public ResultsModel Result { get; set; }
-
     public Create(ClientsStorage clientsStorage)
     {
         this.clientsStorage = clientsStorage;
         Secret = new CreateSecretModel(string.Empty);
     }
+
+    [BindProperty]
+    public CreateSecretModel Secret { get; set; }
+
+    public ResultsModel Result { get; set; }
 
     public async Task<IActionResult> OnPostAsync()
     {

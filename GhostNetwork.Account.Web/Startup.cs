@@ -11,7 +11,6 @@ using GhostNetwork.Account.Web.Services.OAuth.Clients;
 using GhostNetwork.AspNetCore.Identity.Mongo;
 using GhostNetwork.Profiles.Api;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -26,15 +25,12 @@ namespace GhostNetwork.Account.Web
     {
         private const string DefaultDbName = "account";
 
-        private IWebHostEnvironment Environment { get; }
-
-        private IConfiguration Configuration { get; }
-
-        public Startup(IWebHostEnvironment environment, IConfiguration configuration)
+        public Startup(IConfiguration configuration)
         {
-            Environment = environment;
             Configuration = configuration;
         }
+
+        private IConfiguration Configuration { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {

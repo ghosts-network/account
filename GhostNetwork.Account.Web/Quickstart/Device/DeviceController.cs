@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Duende.IdentityServer;
 using Duende.IdentityServer.Configuration;
 using Duende.IdentityServer.Events;
 using Duende.IdentityServer.Extensions;
@@ -12,7 +11,6 @@ using Duende.IdentityServer.Validation;
 using GhostNetwork.Account.Web.Quickstart.Consent;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace GhostNetwork.Account.Web.Quickstart.Device
@@ -24,18 +22,15 @@ namespace GhostNetwork.Account.Web.Quickstart.Device
         private readonly IDeviceFlowInteractionService interaction;
         private readonly IEventService events;
         private readonly IOptions<IdentityServerOptions> options;
-        private readonly ILogger<DeviceController> logger;
 
         public DeviceController(
             IDeviceFlowInteractionService interaction,
             IEventService eventService,
-            IOptions<IdentityServerOptions> options,
-            ILogger<DeviceController> logger)
+            IOptions<IdentityServerOptions> options)
         {
             this.interaction = interaction;
             events = eventService;
             this.options = options;
-            this.logger = logger;
         }
 
         [HttpGet]
@@ -136,10 +131,6 @@ namespace GhostNetwork.Account.Web.Quickstart.Device
                 if (model.ScopesConsented != null && model.ScopesConsented.Any())
                 {
                     var scopes = model.ScopesConsented;
-                    if (ConsentOptions.EnableOfflineAccess == false)
-                    {
-                        scopes = scopes.Where(x => x != IdentityServerConstants.StandardScopes.OfflineAccess);
-                    }
 
                     grantedConsent = new ConsentResponse
                     {
@@ -219,11 +210,6 @@ namespace GhostNetwork.Account.Web.Quickstart.Device
                 }
             }
 
-            if (ConsentOptions.EnableOfflineAccess && request.ValidatedResources.Resources.OfflineAccess)
-            {
-                apiScopes.Add(GetOfflineAccessScope(vm.ScopesConsented.Contains(IdentityServerConstants.StandardScopes.OfflineAccess) || model == null));
-            }
-
             vm.ApiScopes = apiScopes;
 
             return vm;
@@ -239,18 +225,6 @@ namespace GhostNetwork.Account.Web.Quickstart.Device
                 Emphasize = identity.Emphasize,
                 Required = identity.Required,
                 Checked = check || identity.Required
-            };
-        }
-
-        private ScopeViewModel GetOfflineAccessScope(bool check)
-        {
-            return new ScopeViewModel
-            {
-                Value = IdentityServerConstants.StandardScopes.OfflineAccess,
-                DisplayName = ConsentOptions.OfflineAccessDisplayName,
-                Description = ConsentOptions.OfflineAccessDescription,
-                Emphasize = true,
-                Checked = check
             };
         }
     }

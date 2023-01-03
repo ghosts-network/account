@@ -15,12 +15,12 @@ public class Index : PageModel
 {
     private readonly ClientsStorage clientsStorage;
 
-    public IEnumerable<SecretModel> PasswordSecrets { get; set; }
-
     public Index(ClientsStorage clientsStorage)
     {
         this.clientsStorage = clientsStorage;
     }
+
+    public IEnumerable<SecretModel> PasswordSecrets { get; set; }
 
     public async Task<ActionResult> OnGetAsync()
     {
@@ -30,6 +30,6 @@ public class Index : PageModel
             .ToList();
         return Page();
     }
-}
 
-public record SecretModel(string Id, string Description, DateTime Expiration);
+    public record SecretModel(string Id, string Description, DateTime Expiration);
+}

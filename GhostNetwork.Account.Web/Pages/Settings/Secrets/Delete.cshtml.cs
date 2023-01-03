@@ -14,12 +14,12 @@ public class Delete : PageModel
 {
     private readonly ClientsStorage clientsStorage;
 
-    public SecretModel Secret { get; set; }
-
     public Delete(ClientsStorage clientsStorage)
     {
         this.clientsStorage = clientsStorage;
     }
+
+    public SecretModel Secret { get; set; }
 
     public async Task<ActionResult> OnGet([FromRoute] string clientId)
     {
