@@ -8,7 +8,7 @@ using Duende.IdentityServer.Extensions;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Services;
 using Duende.IdentityServer.Stores;
-using GhostNetwork.Account.Web.Services;
+using GhostNetwork.Account.Web.Services.EmailSender;
 using GhostNetwork.Profiles.Api;
 using GhostNetwork.Profiles.Model;
 using IdentityModel;
@@ -351,11 +351,11 @@ namespace GhostNetwork.Account.Web.Quickstart.Account
             var code = await userManager.GenerateEmailConfirmationTokenAsync(user);
             var url = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code }, Request.Scheme);
 
-            var body = $"Please confirm your account by clicking this link: <a href=\"{url}\">link</a>";
-
             var claims = await userManager.GetClaimsAsync(user);
             var name = claims.FirstOrDefault(c => c.Type == JwtClaimTypes.Name)?.Value ?? user.Email;
-            await emailSender.SendEmailAsync(new EmailRecipient(name, user.Email), "Confirm your email", body);
+            await emailSender.SendInviteAsync(
+                new EmailRecipient(user.Id, name, user.Email),
+                new InviteBody(url));
         }
 
         private async Task<LoginViewModel> BuildLoginViewModelAsync(string returnUrl)

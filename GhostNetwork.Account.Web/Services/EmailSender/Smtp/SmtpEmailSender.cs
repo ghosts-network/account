@@ -3,7 +3,7 @@ using MailKit.Net.Smtp;
 using MimeKit;
 using MimeKit.Text;
 
-namespace GhostNetwork.Account.Web.Services.EmailSender
+namespace GhostNetwork.Account.Web.Services.EmailSender.Smtp
 {
     public class SmtpEmailSender : IEmailSender
     {
@@ -14,7 +14,14 @@ namespace GhostNetwork.Account.Web.Services.EmailSender
             this.configuration = configuration;
         }
 
-        public async Task SendEmailAsync(EmailRecipient recipient, string subject, string body)
+        public async Task SendInviteAsync(EmailRecipient recipient, InviteBody body)
+        {
+            var message = $"Please confirm your account by clicking this link: <a href=\"{body.ConfirmationUrl}\">link</a>";
+
+            await SendEmailAsync(recipient, "Confirm your email", message);
+        }
+
+        private async Task SendEmailAsync(EmailRecipient recipient, string subject, string body)
         {
             using var client = new SmtpClient();
 
@@ -23,7 +30,7 @@ namespace GhostNetwork.Account.Web.Services.EmailSender
 
             var emailMessage = new MimeMessage();
             emailMessage.From.Add(new MailboxAddress(configuration.DisplayName, configuration.Email));
-            emailMessage.To.Add(new MailboxAddress(recipient.Name, recipient.Email));
+            emailMessage.To.Add(new MailboxAddress(recipient.FullName, recipient.Email));
             emailMessage.Subject = subject;
             emailMessage.Body = new TextPart(TextFormat.Html)
             {
@@ -31,7 +38,7 @@ namespace GhostNetwork.Account.Web.Services.EmailSender
                 Text = body
             };
 
-            await client.SendAsync(emailMessage);
+            await client.SendAsync(emailMessage).ConfigureAwait(false);
             await client.DisconnectAsync(true);
         }
     }

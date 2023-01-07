@@ -1,11 +1,11 @@
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace GhostNetwork.Account.Web.Services
+namespace GhostNetwork.Account.Web.Services.EmailSender
 {
     public interface IEmailSender
     {
-        Task SendEmailAsync(EmailRecipient recipient, string subject, string body);
+        Task SendInviteAsync(EmailRecipient recipient, InviteBody body);
     }
 
     public class NullEmailSender : IEmailSender
@@ -17,9 +17,9 @@ namespace GhostNetwork.Account.Web.Services
             this.logger = logger;
         }
 
-        public Task SendEmailAsync(EmailRecipient recipient, string subject, string body)
+        public Task SendInviteAsync(EmailRecipient recipient, InviteBody body)
         {
-            logger.LogInformation($"Send email to {recipient.Name} (${recipient.Email}). Subject: {subject}. Body: {body}");
+            logger.LogInformation("Send invitation email to {RecipientFullName} (${RecipientEmail}). Body: {Body}", recipient.FullName, recipient.Email, body);
             return Task.CompletedTask;
         }
     }

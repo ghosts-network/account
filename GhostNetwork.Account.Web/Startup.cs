@@ -5,8 +5,9 @@ using System.Security.Cryptography.X509Certificates;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Services;
 using GhostNetwork.Account.Mongo;
-using GhostNetwork.Account.Web.Services;
 using GhostNetwork.Account.Web.Services.EmailSender;
+using GhostNetwork.Account.Web.Services.EmailSender.NotificationsService;
+using GhostNetwork.Account.Web.Services.EmailSender.Smtp;
 using GhostNetwork.Account.Web.Services.OAuth.Clients;
 using GhostNetwork.AspNetCore.Identity.Mongo;
 using GhostNetwork.Profiles.Api;
@@ -35,7 +36,7 @@ namespace GhostNetwork.Account.Web
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddCors();
-            if (Configuration["EMAIL_SENDER"] == "SMTP")
+            if (Configuration["EMAIL_SENDER"].Equals("smtp", StringComparison.InvariantCultureIgnoreCase))
             {
                 services.AddScoped<IEmailSender, SmtpEmailSender>(_ =>
                 {
@@ -49,6 +50,14 @@ namespace GhostNetwork.Account.Web
                         Configuration["SMTP_EMAIL"]);
                     return new SmtpEmailSender(config);
                 });
+            }
+            else if (Configuration["EMAIL_SENDER"].Equals("service", StringComparison.InvariantCultureIgnoreCase))
+            {
+                services.AddScoped<NotificationsSender>()
+                    .AddHttpClient<NotificationsSender>(c => c.BaseAddress = new Uri(Configuration["NOTIFICATIONS_ADDRESS"]));
+
+                services.AddScoped<IEmailSender, NotificationsSender>(provider =>
+                    provider.GetRequiredService<NotificationsSender>());
             }
             else
             {

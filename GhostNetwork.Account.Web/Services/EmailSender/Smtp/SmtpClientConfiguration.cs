@@ -1,4 +1,4 @@
-namespace GhostNetwork.Account.Web.Services.EmailSender
+namespace GhostNetwork.Account.Web.Services.EmailSender.Smtp
 {
     public class SmtpClientConfiguration
     {
