@@ -8,6 +8,11 @@ namespace GhostNetwork.Account.Web.Services.EmailSender.NotificationsService;
 
 public class NotificationsSender : IEmailSender
 {
+    private readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
     private readonly HttpClient client;
 
     public NotificationsSender(HttpClient client)
@@ -18,11 +23,13 @@ public class NotificationsSender : IEmailSender
     public async Task SendInviteAsync(EmailRecipient recipient, InviteBody body)
     {
         var content = new StringContent(
-            JsonSerializer.Serialize(new
-            {
-                Object = body,
-                Recipients = new[] { recipient }
-            }),
+            JsonSerializer.Serialize(
+                new
+                {
+                    Object = body,
+                    Recipients = new[] { recipient }
+                },
+                jsonOptions),
             Encoding.UTF8,
             MediaTypeNames.Application.Json);
 
